@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>元素競技場 - 火焰特效</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; background-color: #f0f0f0; }
+    #inventory {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 200px;
+      background: white;
+      border: 2px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+    .element-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .element-item:hover {
+      background: #f5f5f5;
+    }
+    .element-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="inventory">
+    <h3>收藏的元素</h3>
+    <div id="elementsList"></div>
+  </div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const player = { x: 100, y: 100, size: 20, color: "blue" };
+    const elements = Array.from({ length: 10 }, () => generateRandomElement());
+    const collectedElements = [];
+    const projectiles = [];
+    const particles = []; // 火焰粒子
+
+    // 生成隨機元素
+    function generateRandomElement() {
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 15,
+        color: ["red", "green", "yellow"][Math.floor(Math.random() * 3)],
+      };
+    }
+
+    // 畫玩家
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.size, player.size);
+    }
+
+    // 畫元素
+    function drawElements() {
+      elements.forEach(el => {
+        ctx.fillStyle = el.color;
+        ctx.beginPath();
+        ctx.arc(el.x, el.y, el.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // 畫投射物
+    function drawProjectiles() {
+      projectiles.forEach((proj, index) => {
+        ctx.fillStyle = proj.color;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        proj.x += proj.vx;
+        proj.y += proj.vy;
+
+        if (
+          proj.x < 0 || proj.x > canvas.width ||
+          proj.y < 0 || proj.y > canvas.height
+        ) {
+          projectiles.splice(index, 1);
+        }
+      });
+    }
+
+    // 創建火焰特效粒子
+    function createFlameEffect(x, y) {
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          size: Math.random() * 5 + 3,
+          color: `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 1)`,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          life: 30,
+          alpha: 1,
+        });
+      }
+    }
+
+    // 畫火焰粒子
+    function drawParticles() {
+      particles.forEach((particle, index) => {
+        ctx.globalAlpha = particle.alpha;
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.alpha -= 0.03; // 漸漸透明
+        particle.size *= 0.95; // 粒子縮小
+        particle.life--;
+
+        if (particle.life <= 0 || particle.alpha <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+    }
+
+    // 檢測碰撞
+    function detectCollision() {
+      elements.forEach((el, index) => {
+        if (
+          player.x < el.x + el.size &&
+          player.x + player.size > el.x &&
+          player.y < el.y + el.size &&
+          player.y + player.size > el.y
+        ) {
+          collectedElements.push(el.color);
+          elements.splice(index, 1);
+          updateInventory();
+        }
+      });
+    }
+
+    // 更新收藏列表
+    function updateInventory() {
+      const elementsList = document.getElementById("elementsList");
+      elementsList.innerHTML = "";
+      collectedElements.forEach((color, index) => {
+        const elementItem = document.createElement("div");
+        elementItem.className = "element-item";
+        elementItem.innerHTML = `
+          <div style="display: flex; align-items: center;">
+            <div class="element-color" style="background: ${color};"></div>
+            ${color}
+          </div>
+          <button>刪除</button>
+        `;
+        elementItem.querySelector("button").addEventListener("click", () => {
+          collectedElements.splice(index, 1);
+          updateInventory();
+        });
+        elementsList.appendChild(elementItem);
+      });
+    }
+
+    // 射擊
+    function shootProjectile(targetX, targetY) {
+      if (collectedElements.length === 0) return;
+      const color = collectedElements.shift();
+
+      const dx = targetX - (player.x + player.size / 2);
+      const dy = targetY - (player.y + player.size / 2);
+      const length = Math.sqrt(dx * dx + dy * dy);
+
+      projectiles.push({
+        x: player.x + player.size / 2,
+        y: player.y + player.size / 2,
+        size: 10,
+        color: color,
+        vx: (dx / length) * 5,
+        vy: (dy / length) * 5,
+      });
+
+      createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
+      updateInventory();
+    }
+
+    // 添加新元素
+    function addNewElement() {
+      elements.push(generateRandomElement());
+    }
+
+    // 遊戲主迴圈
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawElements();
+      drawProjectiles();
+      drawParticles();
+      detectCollision();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 玩家移動邏輯
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") player.y -= 10;
+      if (e.key === "ArrowDown") player.y += 10;
+      if (e.key === "ArrowLeft") player.x -= 10;
+      if (e.key === "ArrowRight") player.x += 10;
+    });
+
+    // 監聽滑鼠點擊事件
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      shootProjectile(mouseX, mouseY);
+    });
+
+    // 每 10 秒新增一個元素
+    setInterval(() => {
+      addNewElement();
+    }, 10000);
+
+    // 啟動遊戲
+    gameLoop();
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+    "H": {
+      "name": "氫",
+      "type": "氣體",
+      "attack": 8,
+      "defense": 2,
+      "special": "易燃",
+      "reaction": ["爆炸", "燃燒"]
+    },
+    "O": {
+      "name": "氧",
+      "type": "氣體",
+      "attack": 5,
+      "defense": 3,
+      "special": "支持燃燒",
+      "reaction": ["水生成", "氧化"]
+    },
+    "Fe": {
+      "name": "鐵",
+      "type": "金屬",
+      "attack": 7,
+      "defense": 6,
+      "special": "強韌",
+      "reaction": ["氧化"]
+    }
+  }
+  
