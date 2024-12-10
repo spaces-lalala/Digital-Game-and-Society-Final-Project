@@ -1,352 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>元素競技場 - 火焰特效</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: row;
-      font-family: Arial, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元素競技場 - 火焰特效</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            font-family: Arial, sans-serif;
+        }
 
-    #left-panel {
-      flex: 3;
-      background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+        #left-panel {
+            flex: 3;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    #right-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-    #top-right {
-      flex: 1;
-      display: flex;
-    }
+        #top-right {
+            flex: 1;
+            display: flex;
+        }
 
-    #bottom-right {
-      flex: 1;
-      background-color: #e8e8e8;
-    }
+        #bottom-right {
+            flex: 1;
+            background-color: #e8e8e8;
+        }
 
-    #inventory {
-        flex: 1;
-        background: white;
-        border: 2px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        margin: 10px;
-        overflow-y: auto; /* 啟用垂直滾動條 */
-        max-height: 200px; /* 設定固定的最大高度 */
-    }
+        #inventory {
+            flex: 1;
+            background: white;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+            overflow-y: auto;
+            /* 啟用垂直滾動條 */
+            max-height: 200px;
+            /* 設定固定的最大高度 */
+        }
+
+        #announcement {
+            flex: 1;
+            background: #fff;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+        }
 
 
-    #top-right > .empty-box {
-      flex: 1;
-      margin: 10px;
-      background-color: #f9f9f9;
-      border: 2px dashed #ccc;
-    }
 
-    canvas {
-      background-color: #d0d0d0;
-    }
-  </style>
+        #top-right>.empty-box {
+            flex: 1;
+            margin: 10px;
+            background-color: #f9f9f9;
+            border: 2px dashed #ccc;
+        }
+
+        canvas {
+            background-color: #d0d0d0;
+        }
+    </style>
 </head>
+
 <body>
-  <div id="left-panel">
-    <canvas id="gameCanvas"></canvas>
-  </div>
-  <div id="right-panel">
-    <div id="top-right">
-      <div id="inventory">
-        <h3>收藏的元素</h3>
-        <div id="elementsList"></div>
-      </div>
-      <div class="empty-box"></div>
+    <div id="left-panel">
+        <canvas id="gameCanvas"></canvas>
     </div>
-    <div id="bottom-right"></div>
-  </div>
+    <div id="right-panel">
+        <div id="top-right">
+            <div id="inventory">
+                <h3>收藏的元素</h3>
+                <div id="elementsList"></div>
+            </div>
+            <div class="empty-box"></div>
+        </div>
+        <div id="announcement">
+            <h3 id="announcement-title">說明欄</h3>
+            <p id="announcement-content">
+                這邊之後可以放元素教學等等等說明
+            </p>
+        </div>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = document.getElementById("left-panel").offsetWidth;
-    canvas.height = window.innerHeight;
+    </div>
 
-    const player = { x: 100, y: 100, size: 20, color: "blue" };
-    const elements = Array.from({ length: 10 }, () => generateRandomElement());
-    const collectedElements = [];
-    const projectiles = [];
-    const particles = []; // 火焰粒子
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = document.getElementById("left-panel").offsetWidth;
+        canvas.height = window.innerHeight;
 
-    // 生成隨機元素
-    function generateRandomElement() {
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: 15,
-        color: ["red", "green", "yellow"][Math.floor(Math.random() * 3)],
-      };
-    }
+        const player = { x: 100, y: 100, size: 20, color: "blue" };
+        const elements = Array.from({ length: 10 }, () => generateRandomElement());
+        const collectedElements = [];
+        const projectiles = [];
+        const particles = []; // 火焰粒子
 
-    // 畫玩家
-    function drawPlayer() {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.size, player.size);
-    }
-
-    // 畫元素
-    function drawElements() {
-      elements.forEach(el => {
-        ctx.fillStyle = el.color;
-        ctx.beginPath();
-        ctx.arc(el.x, el.y, el.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
-
-    // 畫投射物
-    function drawProjectiles() {
-      projectiles.forEach((proj, index) => {
-        ctx.fillStyle = proj.color;
-        ctx.beginPath();
-        ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        proj.x += proj.vx;
-        proj.y += proj.vy;
-
-        if (
-          proj.x < 0 || proj.x > canvas.width ||
-          proj.y < 0 || proj.y > canvas.height
-        ) {
-          projectiles.splice(index, 1);
+        // 生成隨機元素
+        function generateRandomElement() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 15,
+                color: ["red", "green", "yellow"][Math.floor(Math.random() * 3)],
+            };
         }
-      });
-    }
 
-    // 創建火焰特效粒子
-    function createFlameEffect(x, y) {
-      for (let i = 0; i < 20; i++) {
-        particles.push({
-          x: x,
-          y: y,
-          size: Math.random() * 5 + 3,
-          color: `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 1)`,
-          vx: (Math.random() - 0.5) * 4,
-          vy: (Math.random() - 0.5) * 4,
-          life: 30,
-          alpha: 1,
-        });
-      }
-    }
+        // 畫玩家
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+        }
 
-    function createIceEffect(x, y) {
-        for (let i = 0; i < 15; i++) {
-            particles.push({
-            x: x,
-            y: y,
-            size: Math.random() * 8 + 4,
-            color: `rgba(173, 216, 230, ${Math.random() * 0.8 + 0.2})`, // 冰藍色
-            vx: (Math.random() - 0.5) * 2,
-            vy: (Math.random() - 0.5) * 2,
-            life: 40,
-            alpha: 1,
+        // 畫元素
+        function drawElements() {
+            elements.forEach(el => {
+                ctx.fillStyle = el.color;
+                ctx.beginPath();
+                ctx.arc(el.x, el.y, el.size, 0, Math.PI * 2);
+                ctx.fill();
             });
         }
-    }
 
-    function createLightEffect(x, y) {
-        for (let i = 0; i < 10; i++) {
-            particles.push({
-            x: x,
-            y: y,
-            size: Math.random() * 3 + 1,
-            color: `rgba(255, 255, 0, ${Math.random() * 0.7 + 0.3})`, // 金黃色
-            vx: Math.random() * 4 - 2, // 快速移動
-            vy: Math.random() * 4 - 2,
-            life: 20,
-            alpha: 1,
+        // 畫投射物
+        function drawProjectiles() {
+            projectiles.forEach((proj, index) => {
+                ctx.fillStyle = proj.color;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                proj.x += proj.vx;
+                proj.y += proj.vy;
+
+                if (
+                    proj.x < 0 || proj.x > canvas.width ||
+                    proj.y < 0 || proj.y > canvas.height
+                ) {
+                    projectiles.splice(index, 1);
+                }
             });
         }
-    }
 
-    function createPoisonEffect(x, y) {
-        for (let i = 0; i < 30; i++) {
-            particles.push({
-            x: x + (Math.random() - 0.5) * 50, // 隨機分散
-            y: y + (Math.random() - 0.5) * 50,
-            size: Math.random() * 6 + 2,
-            color: `rgba(0, 128, 0, ${Math.random() * 0.5 + 0.5})`, // 深綠色
-            vx: (Math.random() - 0.5) * 1,
-            vy: (Math.random() - 0.5) * 1,
-            life: 50,
-            alpha: 1,
+        // 創建火焰特效粒子
+        function createFlameEffect(x, y) {
+            for (let i = 0; i < 40; i++) { // 增加粒子數量
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 8 + 4, // 粒子更大
+                    color: `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 0.9)`, // 更亮的橙紅色
+                    vx: (Math.random() - 0.5) * 6, // 更快的移動
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 50, // 延長壽命
+                    alpha: 1,
+                });
+            }
+        }
+
+
+        function createIceEffect(x, y) {
+            for (let i = 0; i < 30; i++) { // 增加粒子數量
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 10 + 5, // 粒子更大
+                    color: `rgba(173, 216, 230, ${Math.random() * 0.9 + 0.3})`, // 更濃的冰藍色
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3,
+                    life: 60, // 延長壽命
+                    alpha: 1,
+                });
+            }
+        }
+
+
+        function createLightEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 5 + 2,
+                    color: `rgba(255, 255, 0, ${Math.random() * 0.8 + 0.5})`, // 更亮的金黃色
+                    vx: Math.random() * 8 - 4, // 更快擴散
+                    vy: Math.random() * 8 - 4,
+                    life: 30, // 壽命保持中等
+                    alpha: 1,
+                });
+            }
+        }
+
+
+        function createPoisonEffect(x, y) {
+            for (let i = 0; i < 50; i++) { // 增加粒子數量
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 80, // 毒氣擴散範圍更廣
+                    y: y + (Math.random() - 0.5) * 80,
+                    size: Math.random() * 8 + 4,
+                    color: `rgba(0, 128, 0, ${Math.random() * 0.8 + 0.5})`, // 更濃的綠色
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 80, // 延長壽命
+                    alpha: 1,
+                });
+            }
+        }
+
+
+
+
+        // 畫火焰粒子
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                ctx.globalAlpha = particle.alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.alpha -= 0.03; // 漸漸透明
+                particle.size *= 0.95; // 粒子縮小
+                particle.life--;
+
+                if (particle.life <= 0 || particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
             });
         }
-    }
 
-
-
-    // 畫火焰粒子
-    function drawParticles() {
-      particles.forEach((particle, index) => {
-        ctx.globalAlpha = particle.alpha;
-        ctx.fillStyle = particle.color;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.alpha -= 0.03; // 漸漸透明
-        particle.size *= 0.95; // 粒子縮小
-        particle.life--;
-
-        if (particle.life <= 0 || particle.alpha <= 0) {
-          particles.splice(index, 1);
+        // 檢測碰撞
+        function detectCollision() {
+            elements.forEach((el, index) => {
+                if (
+                    player.x < el.x + el.size &&
+                    player.x + player.size > el.x &&
+                    player.y < el.y + el.size &&
+                    player.y + player.size > el.y
+                ) {
+                    collectedElements.push(el.color);
+                    elements.splice(index, 1);
+                    updateInventory();
+                }
+            });
         }
-      });
-    }
 
-    // 檢測碰撞
-    function detectCollision() {
-      elements.forEach((el, index) => {
-        if (
-          player.x < el.x + el.size &&
-          player.x + player.size > el.x &&
-          player.y < el.y + el.size &&
-          player.y + player.size > el.y
-        ) {
-          collectedElements.push(el.color);
-          elements.splice(index, 1);
-          updateInventory();
-        }
-      });
-    }
-
-    // 更新收藏列表
-    function updateInventory() {
-      const elementsList = document.getElementById("elementsList");
-      elementsList.innerHTML = "";
-      collectedElements.forEach((color, index) => {
-        const elementItem = document.createElement("div");
-        elementItem.className = "element-item";
-        elementItem.innerHTML = `
+        // 更新收藏列表
+        function updateInventory() {
+            const elementsList = document.getElementById("elementsList");
+            elementsList.innerHTML = "";
+            collectedElements.forEach((color, index) => {
+                const elementItem = document.createElement("div");
+                elementItem.className = "element-item";
+                elementItem.innerHTML = `
           <div style="display: flex; align-items: center;">
             <div class="element-color" style="background: ${color};"></div>
             ${color}
           </div>
           <button>刪除</button>
         `;
-        elementItem.querySelector("button").addEventListener("click", () => {
-          collectedElements.splice(index, 1);
-          updateInventory();
-        });
-        elementsList.appendChild(elementItem);
-      });
-    }
-
-    // 射擊
-    function shootProjectile(targetX, targetY) {
-        if (collectedElements.length === 0) return;
-
-        const color = collectedElements.shift(); // 拿到顏色
-        const dx = targetX - (player.x + player.size / 2);
-        const dy = targetY - (player.y + player.size / 2);
-        const length = Math.sqrt(dx * dx + dy * dy);
-
-        projectiles.push({
-            x: player.x + player.size / 2,
-            y: player.y + player.size / 2,
-            size: 10,
-            color: color,
-            vx: (dx / length) * 5,
-            vy: (dy / length) * 5,
-        });
-
-        // 根據顏色觸發不同特效
-        switch (color) {
-            case "red":
-            createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
-            break;
-            case "blue":
-            createIceEffect(player.x + player.size / 2, player.y + player.size / 2);
-            break;
-            case "yellow":
-            createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
-            break;
-            case "green":
-            createPoisonEffect(player.x + player.size / 2, player.y + player.size / 2);
-            break;
+                elementItem.querySelector("button").addEventListener("click", () => {
+                    collectedElements.splice(index, 1);
+                    updateInventory();
+                });
+                elementsList.appendChild(elementItem);
+            });
         }
 
-        updateInventory();
-    }
+        // 射擊
+        function shootProjectile(targetX, targetY) {
+            if (collectedElements.length === 0) return;
+
+            const color = collectedElements.shift(); // 拿到顏色
+            const dx = targetX - (player.x + player.size / 2);
+            const dy = targetY - (player.y + player.size / 2);
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            projectiles.push({
+                x: player.x + player.size / 2,
+                y: player.y + player.size / 2,
+                size: 10,
+                color: color,
+                vx: (dx / length) * 5,
+                vy: (dy / length) * 5,
+            });
+
+            // 根據顏色觸發不同特效
+            switch (color) {
+                case "red":
+                    createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+                case "blue":
+                    createIceEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+                case "yellow":
+                    createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+                case "green":
+                    createPoisonEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+            }
+
+            updateInventory();
+        }
 
 
-    // 添加新元素
-    function addNewElement() {
-      elements.push(generateRandomElement());
-    }
+        // 添加新元素
+        function addNewElement() {
+            elements.push(generateRandomElement());
+        }
 
-    // 遊戲主迴圈
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlayer();
-      drawElements();
-      drawProjectiles();
-      drawParticles();
-      detectCollision();
-      requestAnimationFrame(gameLoop);
-    }
+        // 遊戲主迴圈
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawElements();
+            drawProjectiles();
+            drawParticles();
+            detectCollision();
+            requestAnimationFrame(gameLoop);
+        }
 
-    // 玩家移動邏輯
-    // 玩家移動邏輯，加入邊界檢查
-document.addEventListener("keydown", (e) => {
-  const step = 10; // 玩家移動的步長
+        // 玩家移動邏輯
+        // 玩家移動邏輯，加入邊界檢查
+        document.addEventListener("keydown", (e) => {
+            const step = 10; // 玩家移動的步長
 
-  if (e.key === "ArrowUp" && player.y > 0) {
-    player.y -= step; // 防止超出上邊界
-  }
-  if (e.key === "ArrowDown" && player.y + player.size < canvas.height) {
-    player.y += step; // 防止超出下邊界
-  }
-  if (e.key === "ArrowLeft" && player.x > 0) {
-    player.x -= step; // 防止超出左邊界
-  }
-  if (e.key === "ArrowRight" && player.x + player.size < canvas.width) {
-    player.x += step; // 防止超出右邊界
-  }
-});
+            if (e.key === "ArrowUp" && player.y > 0) {
+                player.y -= step; // 防止超出上邊界
+            }
+            if (e.key === "ArrowDown" && player.y + player.size < canvas.height) {
+                player.y += step; // 防止超出下邊界
+            }
+            if (e.key === "ArrowLeft" && player.x > 0) {
+                player.x -= step; // 防止超出左邊界
+            }
+            if (e.key === "ArrowRight" && player.x + player.size < canvas.width) {
+                player.x += step; // 防止超出右邊界
+            }
+        });
 
 
-    // 監聽滑鼠點擊事件
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      shootProjectile(mouseX, mouseY);
-    });
+        // 監聽滑鼠點擊事件
+        canvas.addEventListener("click", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            shootProjectile(mouseX, mouseY);
+        });
 
-    // 每 10 秒新增一個元素
-    setInterval(() => {
-      addNewElement();
-    }, 10000);
+        // 每 10 秒新增一個元素
+        setInterval(() => {
+            addNewElement();
+        }, 10000);
 
-    // 啟動遊戲
-    gameLoop();
-  </script>
+        // 啟動遊戲
+        gameLoop();
+    </script>
 </body>
+
 </html>
