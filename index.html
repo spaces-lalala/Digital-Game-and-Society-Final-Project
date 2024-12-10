@@ -151,6 +151,53 @@
       }
     }
 
+    function createIceEffect(x, y) {
+        for (let i = 0; i < 15; i++) {
+            particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 8 + 4,
+            color: `rgba(173, 216, 230, ${Math.random() * 0.8 + 0.2})`, // 冰藍色
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            life: 40,
+            alpha: 1,
+            });
+        }
+    }
+
+    function createLightEffect(x, y) {
+        for (let i = 0; i < 10; i++) {
+            particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 3 + 1,
+            color: `rgba(255, 255, 0, ${Math.random() * 0.7 + 0.3})`, // 金黃色
+            vx: Math.random() * 4 - 2, // 快速移動
+            vy: Math.random() * 4 - 2,
+            life: 20,
+            alpha: 1,
+            });
+        }
+    }
+
+    function createPoisonEffect(x, y) {
+        for (let i = 0; i < 30; i++) {
+            particles.push({
+            x: x + (Math.random() - 0.5) * 50, // 隨機分散
+            y: y + (Math.random() - 0.5) * 50,
+            size: Math.random() * 6 + 2,
+            color: `rgba(0, 128, 0, ${Math.random() * 0.5 + 0.5})`, // 深綠色
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            life: 50,
+            alpha: 1,
+            });
+        }
+    }
+
+
+
     // 畫火焰粒子
     function drawParticles() {
       particles.forEach((particle, index) => {
@@ -213,25 +260,41 @@
 
     // 射擊
     function shootProjectile(targetX, targetY) {
-      if (collectedElements.length === 0) return;
-      const color = collectedElements.shift();
+        if (collectedElements.length === 0) return;
 
-      const dx = targetX - (player.x + player.size / 2);
-      const dy = targetY - (player.y + player.size / 2);
-      const length = Math.sqrt(dx * dx + dy * dy);
+        const color = collectedElements.shift(); // 拿到顏色
+        const dx = targetX - (player.x + player.size / 2);
+        const dy = targetY - (player.y + player.size / 2);
+        const length = Math.sqrt(dx * dx + dy * dy);
 
-      projectiles.push({
-        x: player.x + player.size / 2,
-        y: player.y + player.size / 2,
-        size: 10,
-        color: color,
-        vx: (dx / length) * 5,
-        vy: (dy / length) * 5,
-      });
+        projectiles.push({
+            x: player.x + player.size / 2,
+            y: player.y + player.size / 2,
+            size: 10,
+            color: color,
+            vx: (dx / length) * 5,
+            vy: (dy / length) * 5,
+        });
 
-      createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
-      updateInventory();
+        // 根據顏色觸發不同特效
+        switch (color) {
+            case "red":
+            createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
+            break;
+            case "blue":
+            createIceEffect(player.x + player.size / 2, player.y + player.size / 2);
+            break;
+            case "yellow":
+            createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
+            break;
+            case "green":
+            createPoisonEffect(player.x + player.size / 2, player.y + player.size / 2);
+            break;
+        }
+
+        updateInventory();
     }
+
 
     // 添加新元素
     function addNewElement() {
