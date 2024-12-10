@@ -5,52 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>元素競技場 - 火焰特效</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; background-color: #f0f0f0; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      font-family: Arial, sans-serif;
+    }
+
+    #left-panel {
+      flex: 3;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #top-right {
+      flex: 1;
+      display: flex;
+    }
+
+    #bottom-right {
+      flex: 1;
+      background-color: #e8e8e8;
+    }
+
     #inventory {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 200px;
+      flex: 1;
       background: white;
       border: 2px solid #ccc;
       padding: 10px;
       border-radius: 5px;
-      font-family: Arial, sans-serif;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      margin: 10px;
+      overflow-y: auto;
     }
-    .element-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-      padding: 5px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: background 0.2s;
+
+    #top-right > .empty-box {
+      flex: 1;
+      margin: 10px;
+      background-color: #f9f9f9;
+      border: 2px dashed #ccc;
     }
-    .element-item:hover {
-      background: #f5f5f5;
-    }
-    .element-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      margin-right: 10px;
+
+    canvas {
+      background-color: #d0d0d0;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <div id="inventory">
-    <h3>收藏的元素</h3>
-    <div id="elementsList"></div>
+  <div id="left-panel">
+    <canvas id="gameCanvas"></canvas>
   </div>
+  <div id="right-panel">
+    <div id="top-right">
+      <div id="inventory">
+        <h3>收藏的元素</h3>
+        <div id="elementsList"></div>
+      </div>
+      <div class="empty-box"></div>
+    </div>
+    <div id="bottom-right"></div>
+  </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
+    canvas.width = document.getElementById("left-panel").offsetWidth;
     canvas.height = window.innerHeight;
 
     const player = { x: 100, y: 100, size: 20, color: "blue" };
