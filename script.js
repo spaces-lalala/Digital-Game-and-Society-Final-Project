@@ -23,4 +23,6 @@ document.addEventListener('keydown', (e) => {
   renderMap();
 });
 
+
+
 renderMap();

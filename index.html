@@ -248,12 +248,24 @@
     }
 
     // 玩家移動邏輯
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowUp") player.y -= 10;
-      if (e.key === "ArrowDown") player.y += 10;
-      if (e.key === "ArrowLeft") player.x -= 10;
-      if (e.key === "ArrowRight") player.x += 10;
-    });
+    // 玩家移動邏輯，加入邊界檢查
+document.addEventListener("keydown", (e) => {
+  const step = 10; // 玩家移動的步長
+
+  if (e.key === "ArrowUp" && player.y > 0) {
+    player.y -= step; // 防止超出上邊界
+  }
+  if (e.key === "ArrowDown" && player.y + player.size < canvas.height) {
+    player.y += step; // 防止超出下邊界
+  }
+  if (e.key === "ArrowLeft" && player.x > 0) {
+    player.x -= step; // 防止超出左邊界
+  }
+  if (e.key === "ArrowRight" && player.x + player.size < canvas.width) {
+    player.x += step; // 防止超出右邊界
+  }
+});
+
 
     // 監聽滑鼠點擊事件
     canvas.addEventListener("click", (e) => {
