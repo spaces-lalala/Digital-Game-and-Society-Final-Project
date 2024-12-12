@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元素競技場</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            font-family: Arial, sans-serif;
+        }
+
+        #left-panel {
+            flex: 3;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #top-right {
+            flex: 1;
+            display: flex;
+        }
+
+        #bottom-right {
+            flex: 1;
+            background-color: #e8e8e8;
+        }
+
+        #inventory {
+            flex: 1;
+            background: white;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        #announcement {
+            flex: 1;
+            background: #fff;
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+        }
+
+        #top-right>.empty-box {
+            flex: 1;
+            margin: 10px;
+            background-color: #f9f9f9;
+            border: 2px dashed #ccc;
+        }
+
+        canvas {
+            background-color: #d0d0d0;
+        }
+
+        #health-bar-container {
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            width: 200px;
+            height: 20px;
+            background-color: #ccc;
+            border: 2px solid #000;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #f00;
+            transition: width 0.3s ease;
+        }
+
+        #player-name-container {
+            position: absolute;
+            left: 220px;
+            /* 血條右邊 */
+            bottom: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="left-panel">
+        <canvas id="gameCanvas"></canvas>
+        <div id="health-bar-container">
+            <div id="health-bar"></div>
+        </div>
+        <div id="player-name-container">
+            <span id="player-name"></span>
+        </div>
+    </div>
+    <div id="right-panel">
+        <div id="top-right">
+            <div id="inventory">
+                <h3>收藏的元素</h3>
+                <div id="elementsList"></div>
+            </div>
+            <div class="empty-box"></div>
+        </div>
+        <div id="announcement">
+            <h3 id="announcement-title">說明欄</h3>
+            <p id="announcement-content">
+                這邊之後可以放元素教學等等等說明
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = document.getElementById("left-panel").offsetWidth;
+        canvas.height = window.innerHeight;
+
+        const player = { x: 100, y: 100, size: 20, color: "blue", health: 100 };
+        const elements = Array.from({ length: 10 }, () => generateRandomElement());
+        const collectedElements = {}; // 使用對象來追踪元素及其數量
+        const projectiles = [];
+        const particles = []; // 火焰粒子
+
+        const keysPressed = {}; // 用於追踪按下的按鍵
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerName = urlParams.get('name') || '未命名玩家';
+        document.getElementById("player-name").textContent = playerName;
+
+
+        function generateRandomElement() {
+            const colors = ["red", "green", "yellow", "black"];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 15,
+                color: color,
+            };
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+        }
+
+        function drawElements() {
+            elements.forEach(el => {
+                ctx.fillStyle = el.color;
+                ctx.beginPath();
+                ctx.arc(el.x, el.y, el.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawProjectiles() {
+            projectiles.forEach((proj, index) => {
+                ctx.fillStyle = proj.color;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                proj.x += proj.vx;
+                proj.y += proj.vy;
+
+                if (
+                    proj.x < 0 || proj.x > canvas.width ||
+                    proj.y < 0 || proj.y > canvas.height
+                ) {
+                    projectiles.splice(index, 1);
+                }
+            });
+        }
+
+        function createFlameEffect(x, y) {
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 8 + 4,
+                    color: `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 0.9)`,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 50,
+                    alpha: 1,
+                });
+            }
+        }
+
+        function createIceEffect(x, y) {
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 10 + 5,
+                    color: `rgba(173, 216, 230, ${Math.random() * 0.9 + 0.3})`,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3,
+                    life: 60,
+                    alpha: 1,
+                });
+            }
+        }
+
+        function createLightEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 5 + 2,
+                    color: `rgba(255, 255, 0, ${Math.random() * 0.8 + 0.5})`,
+                    vx: Math.random() * 8 - 4,
+                    vy: Math.random() * 8 - 4,
+                    life: 30,
+                    alpha: 1,
+                });
+            }
+        }
+
+        function createPoisonEffect(x, y) {
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 80,
+                    y: y + (Math.random() - 0.5) * 80,
+                    size: Math.random() * 8 + 4,
+                    color: `rgba(0, 128, 0, ${Math.random() * 0.8 + 0.5})`,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 80,
+                    alpha: 1,
+                });
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                ctx.globalAlpha = particle.alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.alpha -= 0.03;
+                particle.size *= 0.95;
+                particle.life--;
+
+                if (particle.life <= 0 || particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+        }
+
+        function updateHealthBar() {
+            const healthBar = document.getElementById("health-bar");
+            healthBar.style.width = `${player.health}%`;
+
+            if (player.health > 50) {
+                healthBar.style.backgroundColor = "#0f0";
+            } else if (player.health > 20) {
+                healthBar.style.backgroundColor = "#ffcc00";
+            } else {
+                healthBar.style.backgroundColor = "#f00";
+            }
+        }
+
+        function detectCollision() {
+            elements.forEach((el, index) => {
+                if (
+                    player.x < el.x + el.size &&
+                    player.x + player.size > el.x &&
+                    player.y < el.y + el.size &&
+                    player.y + player.size > el.y
+                ) {
+                    if (el.color === "black") {
+                        player.health -= 20; // 扣除五分之一的血量
+                        if (player.health < 0) player.health = 0;
+                        updateHealthBar();
+                    } else {
+                        if (!collectedElements[el.color]) {
+                            collectedElements[el.color] = 0;
+                        }
+                        collectedElements[el.color] += 1;
+                        updateInventory();
+                    }
+                    elements.splice(index, 1);
+                }
+            });
+        }
+
+        function shootProjectile(targetX, targetY) {
+            const colors = Object.keys(collectedElements);
+            if (colors.length === 0) return;
+
+            const color = colors[0];
+            collectedElements[color] -= 1;
+            if (collectedElements[color] === 0) {
+                delete collectedElements[color];
+            }
+
+            const dx = targetX - (player.x + player.size / 2);
+            const dy = targetY - (player.y + player.size / 2);
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            projectiles.push({
+                x: player.x + player.size / 2,
+                y: player.y + player.size / 2,
+                size: 10,
+                color: color,
+                vx: (dx / length) * 5,
+                vy: (dy / length) * 5,
+            });
+
+            switch (color) {
+                case "red":
+                    createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+                case "green":
+                    createPoisonEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+                case "yellow":
+                    createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
+            }
+
+            updateInventory();
+        }
+
+        function updateInventory() {
+            const elementsList = document.getElementById("elementsList");
+            elementsList.innerHTML = ""; // 清空当前显示的内容
+            for (const [color, count] of Object.entries(collectedElements)) {
+                const elementItem = document.createElement("div");
+                elementItem.className = "element-item";
+                elementItem.style.display = "flex";
+                elementItem.style.justifyContent = "space-between";
+                elementItem.style.alignItems = "center";
+                elementItem.style.marginBottom = "5px";
+
+                // 元素显示部分
+                const elementInfo = document.createElement("div");
+                elementInfo.style.display = "flex";
+                elementInfo.style.alignItems = "center";
+                elementInfo.innerHTML = `
+            <div class="element-color" style="background: ${color}; width: 20px; height: 20px; margin-right: 10px;"></div>
+            ${color.charAt(0).toUpperCase() + color.slice(1)} x${count}
+        `;
+
+                // 删除按钮
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "刪除";
+                deleteButton.style.marginLeft = "10px";
+                deleteButton.style.background = "#ff4d4d";
+                deleteButton.style.color = "white";
+                deleteButton.style.border = "none";
+                deleteButton.style.padding = "5px";
+                deleteButton.style.borderRadius = "3px";
+                deleteButton.style.cursor = "pointer";
+
+                deleteButton.addEventListener("click", () => {
+                    delete collectedElements[color]; // 从收集的元素中删除
+                    updateInventory(); // 更新显示
+                });
+
+                // 添加到条目中
+                elementItem.appendChild(elementInfo);
+                elementItem.appendChild(deleteButton);
+                elementsList.appendChild(elementItem);
+            }
+        }
+
+
+        canvas.addEventListener("click", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            shootProjectile(mouseX, mouseY);
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawElements();
+            drawProjectiles();
+            drawParticles();
+            detectCollision();
+
+            const step = 1;
+            if (keysPressed["ArrowUp"] && player.y > 0) {
+                player.y -= step;
+            }
+            if (keysPressed["ArrowDown"] && player.y + player.size < canvas.height) {
+                player.y += step;
+            }
+            if (keysPressed["ArrowLeft"] && player.x > 0) {
+                player.x -= step;
+            }
+            if (keysPressed["ArrowRight"] && player.x + player.size < canvas.width) {
+                player.x += step;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            keysPressed[e.key] = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            keysPressed[e.key] = false;
+        });
+
+        setInterval(() => {
+            elements.push(generateRandomElement());
+        }, 10000);
+
+        gameLoop();
+    </script>
+</body>
+
+</html>
