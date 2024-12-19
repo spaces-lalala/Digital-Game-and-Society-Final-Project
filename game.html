@@ -32,6 +32,9 @@
         #top-right {
             flex: 1;
             display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px;
         }
 
         #bottom-right {
@@ -65,11 +68,50 @@
             align-items: stretch;
         }
 
-        #top-right>.empty-box {
-            flex: 1;
-            margin: 10px;
-            background-color: #f9f9f9;
-            border: 2px dashed #ccc;
+        #combine-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #combine-button:hover {
+            background-color: #45a049;
+        }
+
+        #combine-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #combine-modal h3 {
+            margin: 0 0 20px;
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
         }
 
         canvas {
@@ -127,7 +169,9 @@
                 <h3>收藏的元素</h3>
                 <div id="elementsList"></div>
             </div>
-            <div class="empty-box"></div>
+            <div>
+                <button id="combine-button">化合</button>
+            </div>
         </div>
         <div id="announcement">
             <h3 id="announcement-title">說明欄</h3>
@@ -136,6 +180,20 @@
             </p>
         </div>
 
+    </div>
+
+    <div id="modal-overlay"></div>
+    <div id="combine-modal">
+        <h3>魔法老奶奶</h3>
+        <p>你想製作甚麼呢?</p>
+        <div id="current-elements">
+            <!-- 顯示當前元素 -->
+        </div>
+        <div id="compound-buttons"
+            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0;">
+            <!-- 化合按鈕 -->
+        </div>
+        <button id="close-modal">返回</button>
     </div>
 
     <script>
@@ -156,15 +214,53 @@
         const playerName = urlParams.get('name') || '未命名玩家';
         document.getElementById("player-name").textContent = playerName;
 
+        const combineButton = document.getElementById("combine-button");
+        const combineModal = document.getElementById("combine-modal");
+        const modalOverlay = document.getElementById("modal-overlay");
+        const closeModal = document.getElementById("close-modal");
+
+        const compounds = {
+            "葡萄糖": { formula: { "C": 6, "H": 12, "O": 6 } },
+            "蔗糖": { formula: { "C": 12, "H": 22, "O": 11 } },
+            "碳盾": { formula: { "C": 3 } },
+            "二氧化碳": { formula: { "C": 1, "O": 2 } },
+            "醋酸": { formula: { "C": 2, "H": 4, "O": 2 } },
+            "尚未開放": { formula: { "C": 999, "H": 999, "O": 999 } },
+        };
+
+        combineButton.addEventListener("click", () => {
+            combineModal.style.display = "block";
+            modalOverlay.style.display = "block";
+        });
+
+        closeModal.addEventListener("click", () => {
+            combineModal.style.display = "none";
+            modalOverlay.style.display = "none";
+        });
+
+        modalOverlay.addEventListener("click", () => {
+            combineModal.style.display = "none";
+            modalOverlay.style.display = "none";
+        });
+
+        // 更新化合按鈕事件綁定
+        document.getElementById("combine-button").addEventListener("click", () => {
+            updateCombineModal();
+            document.getElementById("combine-modal").style.display = "block";
+            document.getElementById("modal-overlay").style.display = "block";
+        });
+
 
         function generateRandomElement() {
-            const colors = ["red", "green", "yellow", "black"];
-            const color = colors[Math.floor(Math.random() * colors.length)];
+            const elementTypes = ["lightblue", "aliceblue", "gray", "black"];
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X" };
+            const color = elementTypes[Math.floor(Math.random() * elementTypes.length)];
             return {
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
                 size: 15,
                 color: color,
+                symbol: elementSymbols[color],
             };
         }
 
@@ -179,6 +275,13 @@
                 ctx.beginPath();
                 ctx.arc(el.x, el.y, el.size, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Draw the element symbol at the center of the element
+                ctx.fillStyle = "#000";
+                ctx.font = "bold 12px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(el.symbol, el.x, el.y);
             });
         }
 
@@ -293,8 +396,13 @@
             } else {
                 healthBar.style.backgroundColor = "#f00";
             }
-        }
 
+            // 偵測血量是否歸零
+            if (player.health <= 0) {
+                alert("遊戲結束！血量歸零。");
+                cancelAnimationFrame(gameLoop); // 停止遊戲循環
+            }
+        }
         function detectCollision() {
             elements.forEach((el, index) => {
                 if (
@@ -343,13 +451,13 @@
             });
 
             switch (color) {
-                case "red":
+                case "lightblue":
                     createFlameEffect(player.x + player.size / 2, player.y + player.size / 2);
                     break;
-                case "green":
+                case "aliceblue":
                     createPoisonEffect(player.x + player.size / 2, player.y + player.size / 2);
                     break;
-                case "yellow":
+                case "gray":
                     createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
                     break;
             }
@@ -360,7 +468,11 @@
         function updateInventory() {
             const elementsList = document.getElementById("elementsList");
             elementsList.innerHTML = ""; // 清空当前显示的内容
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X" };
+
             for (const [color, count] of Object.entries(collectedElements)) {
+                const symbol = elementSymbols[color] || "?"; // 確保有符號映射
+
                 const elementItem = document.createElement("div");
                 elementItem.className = "element-item";
                 elementItem.style.display = "flex";
@@ -373,11 +485,12 @@
                 elementInfo.style.display = "flex";
                 elementInfo.style.alignItems = "center";
                 elementInfo.innerHTML = `
-            <div class="element-color" style="background: ${color}; width: 20px; height: 20px; margin-right: 10px;"></div>
-            ${color.charAt(0).toUpperCase() + color.slice(1)} x${count}
-        `;
+                    <div class="element-symbol" style="display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; font-weight: bold; border: 1px solid #000; margin-right: 10px;">
+                        ${symbol}
+                    </div>
+                    ${symbol} x${count}
+                `;
 
-                // 删除按钮
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "刪除";
                 deleteButton.style.marginLeft = "10px";
@@ -393,12 +506,12 @@
                     updateInventory(); // 更新显示
                 });
 
-                // 添加到条目中
                 elementItem.appendChild(elementInfo);
                 elementItem.appendChild(deleteButton);
                 elementsList.appendChild(elementItem);
             }
         }
+
 
 
         canvas.addEventListener("click", (e) => {
@@ -416,7 +529,7 @@
             drawParticles();
             detectCollision();
 
-            const step = 1;
+            const step = 2;
             if (keysPressed["ArrowUp"] && player.y > 0) {
                 player.y -= step;
             }
@@ -432,6 +545,133 @@
 
             requestAnimationFrame(gameLoop);
         }
+
+        // 更新化合視窗內容
+        function updateCombineModal() {
+            const currentElements = document.getElementById("current-elements");
+            const compoundButtons = document.getElementById("compound-buttons");
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X" };
+
+            // 顯示當前元素
+            currentElements.innerHTML = "<h4>擁有的元素:</h4>";
+            for (const [color, count] of Object.entries(collectedElements)) {
+                const symbol = elementSymbols[color];
+                currentElements.innerHTML += `<p>${symbol}: ${count}</p>`;
+            }
+
+            // 清空按鈕區域
+            compoundButtons.innerHTML = "";
+
+            // 動態生成按鈕
+            Object.entries(compounds).forEach(([name, { formula }]) => {
+                const button = document.createElement("button");
+                button.textContent = name;
+                button.style.margin = "5px";
+                button.style.padding = "8px 15px";
+                button.style.borderRadius = "5px";
+                button.style.border = "none";
+                button.style.cursor = "pointer";
+
+                // 檢查是否有足夠的元素製作
+                let canMake = true;
+                const missingElements = [];
+
+                Object.entries(formula).forEach(([element, required]) => {
+                    // 找到對應顏色的元素
+                    const colorKey = Object.entries(elementSymbols).find(([_, symbol]) => symbol === element)?.[0];
+                    const available = collectedElements[colorKey] || 0;
+
+                    if (available < required) {
+                        canMake = false;
+                        missingElements.push(`${element}: 需要${required}個，現有${available}個`);
+                    }
+                });
+
+                if (canMake) {
+                    button.style.backgroundColor = "#4CAF50";
+                    button.style.color = "white";
+                    button.addEventListener("click", () => {
+                        // 創建新的詳細資訊視窗
+                        const detailModal = document.createElement("div");
+                        detailModal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                    z-index: 1001;
+                    min-width: 300px;
+                    text-align: center;
+                `;
+
+                        detailModal.innerHTML = `
+                    <h3>${name} 詳細資訊</h3>
+                    <div id="compound-details">
+                        <!-- 這裡可以放置化合物的詳細資訊 -->
+                    </div>
+                    <button id="confirm-combine" style="
+                        background: #4CAF50;
+                        color: white;
+                        border: none;
+                        padding: 8px 15px;
+                        border-radius: 5px;
+                        margin: 10px;
+                        cursor: pointer;
+                    ">確認製作</button>
+                    <button id="cancel-combine" style="
+                        background: #f44336;
+                        color: white;
+                        border: none;
+                        padding: 8px 15px;
+                        border-radius: 5px;
+                        margin: 10px;
+                        cursor: pointer;
+                    ">取消</button>
+                `;
+
+                        document.body.appendChild(detailModal);
+
+                        // 設置確認按鈕事件
+                        document.getElementById("confirm-combine").addEventListener("click", () => {
+                            // 扣除對應元素
+                            Object.entries(formula).forEach(([element, required]) => {
+                                const colorKey = Object.entries(elementSymbols).find(([_, symbol]) => symbol === element)[0];
+                                collectedElements[colorKey] -= required;
+                                if (collectedElements[colorKey] <= 0) {
+                                    delete collectedElements[colorKey];
+                                }
+                            });
+
+                            alert(`製作 ${name} 成功！`);
+                            updateInventory();
+                            updateCombineModal();
+                            detailModal.remove();
+                        });
+
+                        // 設置取消按鈕事件
+                        document.getElementById("cancel-combine").addEventListener("click", () => {
+                            detailModal.remove();
+                        });
+                    });
+                } else {
+                    button.style.backgroundColor = "#ccc";
+                    button.style.color = "white";
+                    button.title = `無法製作，缺少元素：\n${missingElements.join('\n')}`;
+                }
+
+                compoundButtons.appendChild(button);
+            });
+        }
+
+        // 化合按鈕事件綁定
+        combineButton.addEventListener("click", () => {
+            updateCombineModal();
+            combineModal.style.display = "block";
+            modalOverlay.style.display = "block";
+        });
 
         document.addEventListener("keydown", (e) => {
             keysPressed[e.key] = true;
