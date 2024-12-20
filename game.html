@@ -42,16 +42,69 @@
             background-color: #e8e8e8;
         }
 
-        #inventory {
+        #inventory,
+        #craftedCompounds {
             flex: 1;
             background: white;
             border: 2px solid #ccc;
             padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin: 10px;
             overflow-y: auto;
-            max-height: 200px;
+            max-height: 250px;
+        }
+
+        #inventory h3,
+        #craftedCompounds h3 {
+            margin: 0 0 10px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        #elementsList,
+        #craftedList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 5px;
+        }
+
+        .element-item,
+        .compound-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .element-item:hover,
+        .compound-item:hover {
+            background: #f9f9f9;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-compound {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .delete-compound:hover {
+            background: #e03c3c;
         }
 
         #announcement {
@@ -69,18 +122,29 @@
         }
 
         #combine-button {
-            padding: 10px 20px;
+            margin: 20px auto;
+            padding: 15px 30px;
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+            display: block;
+            transition: background 0.3s ease, transform 0.2s ease;
         }
 
-        #combine-button:hover {
+        #combine-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #combine-button:hover:not(:disabled) {
             background-color: #45a049;
+            transform: scale(1.05);
         }
 
         #combine-modal {
@@ -102,6 +166,8 @@
         #combine-modal h3 {
             margin: 0 0 20px;
         }
+
+
 
         #modal-overlay {
             display: none;
@@ -169,19 +235,19 @@
                 <h3>收藏的元素</h3>
                 <div id="elementsList"></div>
             </div>
-            <div>
-                <button id="combine-button">化合</button>
+            <div id="craftedCompounds">
+                <h3>已製作化合物 <span id="compoundCount">0/2</span></h3>
+                <div id="craftedList"></div>
             </div>
         </div>
+        <button id="combine-button">化合</button>
         <div id="announcement">
             <h3 id="announcement-title">說明欄</h3>
             <p id="announcement-content">
                 這邊之後可以放元素教學等等等說明
             </p>
         </div>
-
     </div>
-
     <div id="modal-overlay"></div>
     <div id="combine-modal">
         <h3>魔法老奶奶</h3>
@@ -225,7 +291,7 @@
             "碳盾": { formula: { "C": 3 } },
             "二氧化碳": { formula: { "C": 1, "O": 2 } },
             "醋酸": { formula: { "C": 2, "H": 4, "O": 2 } },
-            "一氧化二氮": { formula: { "C":0, "H":0,"O": 1,"N":2 }}
+            "一氧化二氮": { formula: { "O": 1, "N": 2 } }
         };
 
         const compoundDetails = {
@@ -234,27 +300,27 @@
                 effect: "立刻恢復玩家 20點血量",
                 elements: "碳（C）×6 氫（H）×12 氧（O）×6",
                 properties: "可快速製造，適合緊急情況下使用。為最基礎的治療物品，不具備額外功能。",
-                recipe: "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 能量",
+                recipe: "6CO₂ + 6H₂O + 光能 → C₆H₁₂O₆ + 6O₂",
                 story: [
-                    "啊，想要製作葡萄糖是嗎？讓老婆婆教你一個祖傳的秘方。",
-                    "首先，我們需要在溫暖的環境下進行光合作用。你知道嗎？植物就是這樣製造葡萄糖的！",
-                    "讓我施個小魔法...把這些碳、氫、氧元素排列整齊...",
-                    "看！在陽光的照耀下，元素們開始跳舞了！它們正在進行光合作用的反應。",
-                    "完成了！這就是最純淨的葡萄糖，可以直接補充生命能量哦！"
+                    "哦，魔法師，你來得正好！我聽說你需要些葡萄糖來治癒？別擔心，老婆婆這裡有辦法！",
+                    "首先，把你蒐集到的碳、氫、氧元素拿過來。嗯，不錯，數量剛剛好！",
+                    "接下來，我們需要一些光能和水。我這裡有秘密藥草，可以穩定反應。別看它不起眼，它可是我祖傳的寶貝！",
+                    "好，現在看著我，將這些元素混合在一起，然後施加一點點魔法力量……哈！看到那道光了嗎？反應正在進行！",
+                    "完成了！這就是最純淨的葡萄糖。拿去吧，記得小心使用，這可是生命的甘露啊！"
                 ]
             },
             "蔗糖": {
                 description: "由兩個單醣分子組成，能量密度更高，提供中等程度治療效果。",
-                effect: "恢復玩家 40點血量，使用後提供5秒的加速效果（提升移動速度10%）",
-                elements: "碳（C）×12 氫（H）×22 氧（O）×11",
-                properties: "製造成本較高，恢復效果明顯提升。具有加速效果。",
-                recipe: "C₆H₁₂O₆(葡萄糖) + C₆H₁₂O₆(果糖) → C₁₂H₂₂O₁₁(蔗糖) + H₂O",
+                effect: "恢復玩家 40點血量，並在使用後提供 3秒的加速效果（提升移動速度10%）。",
+                elements: "單醣×2",
+                properties: "製造成本較高，但恢復效果明顯提升，並附帶短暫加速的特殊效果。",
+                recipe: "C₆H₁₂O₆ + C₆H₁₂O₆ - H₂O → C₁₂H₂₂O₁₁",
                 story: [
-                    "哦！蔗糖可是個有趣的小東西呢！",
-                    "讓老婆婆告訴你個秘密：它其實是由葡萄糖和果糖結合而成的。",
-                    "我們需要在適當的溫度和濃度下，讓這兩種糖類相遇...",
-                    "看著～老婆婆正在施展脫水縮合魔法，讓它們結合在一起。",
-                    "瞧！這結晶多漂亮啊！純淨的蔗糖就這樣誕生了。它不只能恢復活力，還能讓你跑得更快呢！"
+                    "哦，你需要蔗糖？這可是能量滿滿的好東西！",
+                    "把兩份單醣拿過來，交給我就行了。這可不是簡單的混合，而是需要一點點魔法的幫助。",
+                    "現在看好了，我用魔法將兩個單醣分子牽起手來，通過一場特殊的縮合反應...",
+                    "看，水分子從它們中間分離出來，它們緊緊相連，變成了蔗糖！",
+                    "完成了！這個蔗糖不僅能恢復你的體力，還能讓你跑得更快，記得用它抓住戰鬥的關鍵時刻哦！"
                 ]
             },
             "碳盾": {
@@ -263,11 +329,11 @@
                 elements: "碳（C）×3",
                 properties: "可升級至更高等級：\n- 等級1（普通）石墨盾：防禦力 +10\n- 等級2（強化）碳納米管盾：防禦力 +20，減少1點酸性傷害\n- 等級3（精煉）金剛石盾：防禦力 +30，耐火效果",
                 story: [
-                    "碳盾啊？這可是個神奇的防具！",
-                    "你知道嗎？碳元素的排列方式決定了它的強度。",
-                    "看好了！老婆婆現在要施展排列魔法...",
-                    "讓碳原子們手牽手，排列成緊密的六邊形結構...",
-                    "完成了！這種結構既輕巧又堅固，能夠完美地保護你。"
+                    "哦，年輕人，你需要一面碳盾嗎？別急，我這就幫你製作！",
+                    "你知道嗎？碳是一種非常特別的元素，它可以變得又輕又強。",
+                    "先拿來三個碳原子，讓我施展排列魔法，把它們編織成六邊形的網格結構...",
+                    "看，這種結構既堅固又靈活，像網一樣能擋住攻擊！",
+                    "好了！這面碳盾完成了，拿去吧，它能很好地保護你！"
                 ]
             },
             "二氧化碳": {
@@ -277,11 +343,11 @@
                 properties: "可用於戰術性控制區域",
                 recipe: "C + O₂ → CO₂",
                 story: [
-                    "要製作二氧化碳嗎？這個可要小心使用啊！",
-                    "老婆婆要在特殊的密閉容器中進行這個反應...",
-                    "看，把碳和氧的比例調整好，讓它們在高溫下相遇...",
-                    "噗！起反應了！碳正在和氧氣跳華爾滋呢！",
-                    "好了！這個二氧化碳氣體可要小心使用，它會讓敵人喘不過氣來哦！"
+                    "啊哈，需要製作二氧化碳？這可是個厲害的戰術工具呢！",
+                    "快，把一顆碳和兩顆氧拿過來，我來幫你完成反應。",
+                    "我們需要高溫來讓它們反應，看著我點燃魔法火焰...哦，看到了嗎？它們開始舞動了！",
+                    "這些碳和氧分子正在跳一支華爾滋，它們緊緊相連，變成了二氧化碳！",
+                    "完成了！記得小心使用，它可是會讓敵人喘不過氣來的呢！"
                 ]
             },
             "醋酸": {
@@ -291,28 +357,31 @@
                 properties: "具有持續性傷害效果",
                 recipe: "CH₃OH + CO + H₂O → CH₃COOH + H₂",
                 story: [
-                    "醋酸可是個調皮的傢伙呢！",
-                    "老婆婆要使用特殊的玻璃容器，因為它會腐蝕一般的容器...",
-                    "先把甲醇和一氧化碳混合在一起，再加入催化劑...",
-                    "噓！安靜看著...分子們正在重新組合...",
-                    "完成啦！小心使用哦，這個酸性可強了！"
+                    "需要醋酸是吧？這東西可得小心，腐蝕性很強呢！",
+                    "先把甲醇、一氧化碳和水拿來，我這裡有特殊的魔法容器，不怕它們反應的腐蝕。",
+                    "好，把它們放進容器裡，然後加入一點催化劑...噓！別出聲，看著化學反應開始！",
+                    "瞧，分子們正在重新排列組合，它們變得越來越活潑了！",
+                    "完成了！這就是醋酸，記住，這可是非常強力的攻擊物品哦！"
                 ]
             },
-            "一氧化二氮":{
-                description: "具有腐蝕性的進攻型物品",
-                effect: "傷害值：15，投擲後在地面生成「腐蝕區域」，造成每秒5點傷害，持續3秒",
-                elements: "碳（C）×2，氫（H）×4，氧（O）×2",
-                properties: "具有持續性傷害效果",
-                recipe: "CH₃OH + CO + H₂O → CH₃COOH + H₂",
+            "一氧化二氮": {
+                description: "能快速向指定方向位移的特殊化學品。",
+                effect: "傷害值：0，特殊功能：向指定方向位移一段距離。",
+                elements: "氮（N）×2，氧（O）×1",
+                properties: "用於快速移動，適合戰鬥中的靈活應用。",
+                recipe: "NH₄NO₃ → N₂O + 2H₂O",
                 story: [
-                    "醋酸可是個調皮的傢伙呢！",
-                    "老婆婆要使用特殊的玻璃容器，因為它會腐蝕一般的容器...",
-                    "先把甲醇和一氧化碳混合在一起，再加入催化劑...",
-                    "噓！安靜看著...分子們正在重新組合...",
-                    "完成啦！小心使用哦，這個酸性可強了！"
+                    "啊，年輕人，你需要加速劑嗎？這可是個讓你如風般移動的魔法物品呢！",
+                    "首先，拿來硝酸銨。我這裡有個特製的魔法坩堝，專門用來處理這種反應。",
+                    "把硝酸銨放進去，然後我會施展火焰魔法...看到了嗎？這些氣泡冒出來了！",
+                    "這就是一氧化二氮！它的氣體會像推進器一樣，給你一股強大的衝力！",
+                    "好了，這加速劑完成了！記住，使用時要注意方向，別一不小心撞到牆哦！"
                 ]
             }
         };
+
+        let craftedCompoundsList = []; // 用於追踪已製作的化合物
+        const maxCompounds = 2;
 
         combineButton.addEventListener("click", () => {
             combineModal.style.display = "block";
@@ -339,7 +408,7 @@
 
         function generateRandomElement() {
             const elementTypes = ["lightblue", "aliceblue", "gray", "black", "green"];
-            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X","green":"N" };
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X", "green": "N" };
             const color = elementTypes[Math.floor(Math.random() * elementTypes.length)];
             return {
                 x: Math.random() * canvas.width,
@@ -546,6 +615,9 @@
                 case "gray":
                     createLightEffect(player.x + player.size / 2, player.y + player.size / 2);
                     break;
+                case "green":
+                    createIceEffect(player.x + player.size / 2, player.y + player.size / 2);
+                    break;
             }
 
             updateInventory();
@@ -553,11 +625,11 @@
 
         function updateInventory() {
             const elementsList = document.getElementById("elementsList");
-            elementsList.innerHTML = ""; // 清空当前显示的内容
-            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X" , "green": "N"};
+            elementsList.innerHTML = ""; // 清空元素清單
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X", "green": "N" };
 
             for (const [color, count] of Object.entries(collectedElements)) {
-                const symbol = elementSymbols[color] || "?"; // 確保有符號映射
+                const symbol = elementSymbols[color] || "?";
 
                 const elementItem = document.createElement("div");
                 elementItem.className = "element-item";
@@ -566,37 +638,49 @@
                 elementItem.style.alignItems = "center";
                 elementItem.style.marginBottom = "5px";
 
-                // 元素显示部分
-                const elementInfo = document.createElement("div");
-                elementInfo.style.display = "flex";
-                elementInfo.style.alignItems = "center";
-                elementInfo.innerHTML = `
-                    <div class="element-symbol" style="display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; font-weight: bold; border: 1px solid #000; margin-right: 10px;">
-                        ${symbol}
-                    </div>
-                    ${symbol} x${count}
-                `;
-
-                const deleteButton = document.createElement("button");
-                deleteButton.textContent = "刪除";
-                deleteButton.style.marginLeft = "10px";
-                deleteButton.style.background = "#ff4d4d";
-                deleteButton.style.color = "white";
-                deleteButton.style.border = "none";
-                deleteButton.style.padding = "5px";
-                deleteButton.style.borderRadius = "3px";
-                deleteButton.style.cursor = "pointer";
-
-                deleteButton.addEventListener("click", () => {
-                    delete collectedElements[color]; // 从收集的元素中删除
-                    updateInventory(); // 更新显示
-                });
-
-                elementItem.appendChild(elementInfo);
-                elementItem.appendChild(deleteButton);
+                elementItem.innerHTML = `<div>${symbol} x${count}</div>`;
                 elementsList.appendChild(elementItem);
             }
+
+            // 更新已製作化合物
+            const craftedList = document.getElementById("craftedList");
+            craftedList.innerHTML = ""; // 清空化合物清單
+            const compoundCount = document.getElementById("compoundCount");
+            compoundCount.textContent = `${craftedCompoundsList.length}/${maxCompounds}`;
+
+            craftedCompoundsList.forEach(compound => {
+                const compoundItem = document.createElement("div");
+                compoundItem.className = "compound-item";
+                compoundItem.style.display = "flex";
+                compoundItem.style.justifyContent = "space-between";
+                compoundItem.style.alignItems = "center";
+                compoundItem.style.marginBottom = "5px";
+
+                compoundItem.innerHTML = `
+            <div>${compound}</div>
+            <button class="delete-compound" style="
+                background: #ff4d4d; 
+                color: white; 
+                border: none; 
+                padding: 5px; 
+                border-radius: 3px; 
+                cursor: pointer;">刪除</button>
+        `;
+
+                compoundItem.querySelector(".delete-compound").addEventListener("click", () => {
+                    craftedCompoundsList = craftedCompoundsList.filter(c => c !== compound);
+                    updateInventory(); // 刪除後更新顯示
+                });
+
+                craftedList.appendChild(compoundItem);
+            });
+
+            // 更新按鈕狀態
+            const combineButton = document.getElementById("combine-button");
+            combineButton.disabled = craftedCompoundsList.length >= maxCompounds;
         }
+
+
 
 
 
@@ -636,7 +720,7 @@
         function updateCombineModal() {
             const currentElements = document.getElementById("current-elements");
             const compoundButtons = document.getElementById("compound-buttons");
-            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X" ,"green":"N"};
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X", "green": "N" };
 
             // 顯示當前元素
             currentElements.innerHTML = "<h4>擁有的元素:</h4>";
@@ -725,6 +809,13 @@
 
                         // 設置確認按鈕事件
                         document.getElementById("confirm-combine").addEventListener("click", () => {
+                            // 檢查是否超過限制
+                            if (craftedCompoundsList.length >= 2) {
+                                alert("最多只能製作兩個化合物！");
+                                return;
+                            }
+
+
                             // 扣除對應元素
                             Object.entries(formula).forEach(([element, required]) => {
                                 const colorKey = Object.entries(elementSymbols).find(([_, symbol]) => symbol === element)[0];
@@ -736,7 +827,11 @@
 
                             // 顯示魔法老婆婆的對話
                             showGrandmaDialog(name);
-
+                            // 添加化合物至清單
+                            craftedCompoundsList.push(name);
+                            // 更新顯示
+                            updateInventory();
+                            updateCombineModal();
                             // 關閉詳細資訊視窗
                             detailModal.remove();
                             // 關閉化合視窗
