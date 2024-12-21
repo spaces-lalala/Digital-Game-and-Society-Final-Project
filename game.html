@@ -216,6 +216,48 @@
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
+
+        #encyclopedia-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #encyclopedia-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        #modal-content button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #modal-content button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 
@@ -241,6 +283,15 @@
             </div>
         </div>
         <button id="combine-button">化合</button>
+        <button id="encyclopedia-button">圖鑑</button>
+
+        <div id="encyclopedia-modal">
+            <h3 id="modal-title">圖鑑</h3>
+            <div id="modal-content"></div>
+            <button id="back-button" style="display: none;">返回</button>
+            <button id="close-encyclopedia">關閉</button>
+        </div>
+        <div id="encyclopedia-overlay"></div>
         <div id="announcement">
             <h3 id="announcement-title">說明欄</h3>
             <p id="announcement-content">
@@ -937,6 +988,187 @@
             updateDialog();
         }
 
+        const encyclopediaButton = document.getElementById("encyclopedia-button");
+        const encyclopediaModal = document.getElementById("encyclopedia-modal");
+        const encyclopediaOverlay = document.getElementById("encyclopedia-overlay");
+        const closeEncyclopedia = document.getElementById("close-encyclopedia");
+        const backButton = document.getElementById("back-button");
+        const modalTitle = document.getElementById("modal-title");
+        const modalContent = document.getElementById("modal-content");
+
+        const elementsData = {
+            "C": "非金屬元素，可形成多樣的化學鍵，構成有機分子的基礎。",
+            "O": "極其活潑，能與大部分元素形成化合物，是地球大氣的主要成分。",
+            "H": "最輕且最豐富的元素，可形成水和有機分子。",
+            "Cl": "鹵素元素，常用於消毒和漂白。",
+            "F": "電負性最強，常用於製造冷媒。",
+            "S": "廣泛存在於礦物和生物體內，可形成酸性氧化物。",
+            "Na": "活潑的鹼金屬，是食鹽的成分。",
+            "Hg": "常溫下為液態金屬，具毒性。",
+            "Si": "半金屬，用於玻璃、晶片和太陽能電池。",
+            "N": "大氣中含量高，能形成高能量化合物。",
+            "Au": "貴金屬，具良好的導電性和延展性。",
+            "Ag": "貴金屬，抗腐蝕且導電性優異。"
+        };
+
+        const compoundsData = {
+            "一般化合物": [
+                {
+                    name: "二氧化碳（CO₂）",
+                    damage: 5,
+                    effect: "生成「窒息區域」，令敵人在該區域內每秒減少2點血量，持續5秒。",
+                    elements: { "碳（C）": 1, "氧（O）": 2 }
+                },
+                {
+                    name: "酒精（乙醇，C₂H₅OH）",
+                    damage: 10,
+                    effect: "消毒，移除敵人身上的「毒性狀態」。",
+                    elements: { "碳（C）": 2, "氫（H）": 6, "氧（O）": 1 }
+                },
+                {
+                    name: "乙酸（醋酸，CH₃COOH）",
+                    damage: 15,
+                    effect: "生成「腐蝕區域」，每秒10點傷害，持續3秒。",
+                    elements: { "碳（C）": 2, "氫（H）": 4, "氧（O）": 2 }
+                },
+                // 其餘一般化合物...
+            ],
+            "治療化合物": [
+                {
+                    name: "單醣（葡萄糖，C₆H₁₂O₆）",
+                    restore: 20,
+                    effect: "適合作為基礎治療物品。",
+                    elements: { "碳（C）": 3, "氫（H）": 6, "氧（O）": 3 }
+                },
+                {
+                    name: "雙醣（蔗糖，C₁₂H₂₂O₁₁）",
+                    restore: 40,
+                    effect: "提供5秒的加速效果。",
+                    elements: { "單醣": 2 }
+                },
+                {
+                    name: "多糖（澱粉或纖維素）",
+                    restore: 80,
+                    effect: "提供20秒的護盾效果。",
+                    elements: { "雙醣": 2 }
+                }
+            ],
+            "護盾化合物": [
+                {
+                    name: "碳盾（Carbon Shield）",
+                    defense: 5,
+                    effect: "適合新手使用。",
+                    elements: { "碳（C）": 10 }
+                },
+                {
+                    name: "銀盾（Silver Shield）",
+                    defense: 15,
+                    effect: "毒性傷害減少5%。",
+                    elements: { "銀（Ag）": 10 }
+                },
+                {
+                    name: "金盾（Golden Shield）",
+                    defense: 30,
+                    effect: "減少10%所有元素傷害。",
+                    elements: { "金（Au）": 5 }
+                }
+            ]
+        };
+
+        // 打開圖鑑模態視窗
+        encyclopediaButton.addEventListener("click", () => {
+            encyclopediaModal.style.display = "block";
+            encyclopediaOverlay.style.display = "block";
+            showMainMenu();
+        });
+
+        // 關閉圖鑑模態視窗
+        closeEncyclopedia.addEventListener("click", () => {
+            encyclopediaModal.style.display = "none";
+            encyclopediaOverlay.style.display = "none";
+        });
+
+        // 返回上一層
+        backButton.addEventListener("click", () => {
+            const currentTitle = modalTitle.textContent;
+
+            if (currentTitle === "化合物分類" || currentTitle === "元素") {
+                showMainMenu();
+            } else if (currentTitle in compoundsData) {
+                showCompoundCategories();
+            }
+        });
+
+        // 主選單
+        function showMainMenu() {
+            modalTitle.textContent = "圖鑑";
+            backButton.style.display = "none";
+            modalContent.innerHTML = `
+        <button id="elements-button">元素</button>
+        <button id="compounds-button">化合物</button>
+    `;
+
+            document.getElementById("elements-button").addEventListener("click", () => {
+                showElements();
+            });
+
+            document.getElementById("compounds-button").addEventListener("click", () => {
+                showCompoundCategories();
+            });
+        }
+
+        // 顯示元素列表
+        function showElements() {
+            modalTitle.textContent = "元素";
+            backButton.style.display = "block";
+            modalContent.innerHTML = "<h4>選擇元素查看詳情</h4>";
+
+            Object.entries(elementsData).forEach(([symbol, description]) => {
+                const button = document.createElement("button");
+                button.textContent = symbol;
+                button.style.margin = "5px";
+                button.addEventListener("click", () => {
+                    modalContent.innerHTML = `<h4>${symbol}</h4><p>${description}</p>`;
+                });
+                modalContent.appendChild(button);
+            });
+        }
+
+        // 顯示化合物分類
+        function showCompoundCategories() {
+            modalTitle.textContent = "化合物分類";
+            backButton.style.display = "block";
+            modalContent.innerHTML = `
+        <button data-category="一般化合物">一般化合物</button>
+        <button data-category="治療化合物">治療化合物</button>
+        <button data-category="護盾化合物">護盾化合物</button>
+    `;
+
+            modalContent.querySelectorAll("button").forEach(button => {
+                button.addEventListener("click", () => {
+                    const category = button.dataset.category;
+                    showCompoundDetails(category);
+                });
+            });
+        }
+
+        // 顯示化合物詳細內容
+        function showCompoundDetails(category) {
+            modalTitle.textContent = category;
+            backButton.style.display = "block";
+            modalContent.innerHTML = compoundsData[category]
+                .map(compound => `
+            <div style="margin-bottom: 10px; text-align: left;">
+                <h4>${compound.name}</h4>
+                <p>傷害值：${compound.damage || "—"}</p>
+                <p>效果：${compound.effect}</p>
+                <p>所需元素：${Object.entries(compound.elements)
+                        .map(([element, count]) => `${element} ×${count}`)
+                        .join(", ")}</p>
+            </div>
+        `)
+                .join("");
+        }
         // 化合按鈕事件綁定
         combineButton.addEventListener("click", () => {
             updateCombineModal();
