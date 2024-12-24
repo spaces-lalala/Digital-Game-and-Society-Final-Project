@@ -258,6 +258,121 @@
         #modal-content button:hover {
             background-color: #45a049;
         }
+
+
+        #button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+        }
+
+        #combine-button {
+            background-color: #21f359;
+        }
+
+        #speed-button {
+            width: 50px;
+            height: 50px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            /* 字體大小縮小 */
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            transition: background 0.3s ease, transform 0.2s ease;
+            text-align: center;
+        }
+
+        #speed-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+
+        #speed-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .speed-option {
+            display: block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+
+
+
+
+        #skill-button {
+            width: 50px;
+            height: 50px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            /* 圓形 */
+            cursor: not-allowed;
+            /* 預設禁用 */
+            font-size: 14px;
+            /* 字體大小縮小 */
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            transition: background 0.3s ease, transform 0.2s ease;
+            text-align: center;
+        }
+
+        #skill-button:enabled {
+            cursor: pointer;
+            background-color: #006494;
+        }
+
+        #skill-button:enabled:hover {
+            background-color: #004d73;
+            transform: scale(1.1);
+            /* 放大輕微效果 */
+        }
+
+        */
     </style>
 </head>
 
@@ -313,6 +428,25 @@
         <button id="close-modal">返回</button>
     </div>
 
+
+    <div id="button-container">
+        <button id="speed-button">移動</button>
+    </div>
+
+    <div id="speed-overlay"></div>
+    <div id="speed-modal">
+        <h3>移動概念</h3>
+        <button class="speed-option" data-speed="fast">氣體</button>
+        <button class="speed-option" data-speed="medium">液體</button>
+        <button class="speed-option" data-speed="slow">固體</button>
+    </div>
+
+
+    <!-- <button id="skill-button">技能</button> -->
+
+
+
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -321,7 +455,6 @@
 
         const player = { x: 100, y: 100, size: 20, color: "blue", health: 100 };
         const elements = Array.from({ length: 10 }, () => generateRandomElement());
-        const collectedElements = {}; // 使用對象來追踪元素及其數量
         const projectiles = [];
         const particles = []; // 火焰粒子
 
@@ -335,6 +468,59 @@
         const combineModal = document.getElementById("combine-modal");
         const modalOverlay = document.getElementById("modal-overlay");
         const closeModal = document.getElementById("close-modal");
+
+        // 定義全域變數
+        let craftedCompoundsList = []; // 化合物清單
+        let collectedElements = {};    // 收集的元素
+
+
+
+        // // 引用按鈕
+        // const skillButton = document.getElementById("skill-button");
+        // // 初始化技能按鈕為禁用
+        // skillButton.disabled = true;
+
+
+
+
+        // 定義技能效果
+        const skills = {
+            "碳盾": {
+                effect: () => {
+                    alert("技能啟動！防禦力提升20點！");
+                    player.health += 20;
+                    if (player.health > 100) player.health = 100; // 最大血量限制
+                    updateHealthBar();
+                },
+            },
+            "葡萄糖": {
+                effect: () => {
+                    alert("技能啟動！立刻恢復生命值 50點！");
+                    player.health += 50;
+                    if (player.health > 100) player.health = 100; // 最大血量限制
+                    updateHealthBar();
+                },
+            },
+            "一氧化二氮": {
+                effect: () => {
+                    alert("技能啟動！高速移動3秒！");
+                    const originalSpeed = 2; // 原始速度
+                    const boostedSpeed = 6; // 提升後的速度
+                    const duration = 3000; // 持續時間（毫秒）
+
+                    const speedBoostInterval = setInterval(() => {
+                        player.x += keysPressed["ArrowRight"] ? boostedSpeed : 0;
+                        player.y += keysPressed["ArrowDown"] ? boostedSpeed : 0;
+                    }, 100);
+
+                    setTimeout(() => {
+                        clearInterval(speedBoostInterval); // 結束加速效果
+                        alert("技能效果結束！");
+                    }, duration);
+                },
+            },
+        };
+
 
         const compounds = {
             "葡萄糖": { formula: { "C": 6, "H": 12, "O": 6 } },
@@ -431,7 +617,6 @@
             }
         };
 
-        let craftedCompoundsList = []; // 用於追踪已製作的化合物
         const maxCompounds = 2;
 
         combineButton.addEventListener("click", () => {
@@ -560,7 +745,7 @@
                 particles.push({
                     x: x + (Math.random() - 0.5) * 80,
                     y: y + (Math.random() - 0.5) * 80,
-                    size: Math.random() * 8 + 4,
+                    size: Math.random() * 5 + 4,
                     color: `rgba(0, 128, 0, ${Math.random() * 0.8 + 0.5})`,
                     vx: (Math.random() - 0.5) * 2,
                     vy: (Math.random() - 0.5) * 2,
@@ -676,9 +861,16 @@
 
         function updateInventory() {
             const elementsList = document.getElementById("elementsList");
-            elementsList.innerHTML = ""; // 清空元素清單
-            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X", "green": "N" };
+            const craftedList = document.getElementById("craftedList");
+            const compoundCount = document.getElementById("compoundCount");
 
+            // 清空現有內容
+            elementsList.innerHTML = "";
+            craftedList.innerHTML = "";
+            compoundCount.textContent = `${craftedCompoundsList.length}/${maxCompounds}`;
+
+            // 更新收集的元素
+            const elementSymbols = { "lightblue": "H", "aliceblue": "O", "gray": "C", "black": "X", "green": "N" };
             for (const [color, count] of Object.entries(collectedElements)) {
                 const symbol = elementSymbols[color] || "?";
 
@@ -693,43 +885,72 @@
                 elementsList.appendChild(elementItem);
             }
 
-            // 更新已製作化合物
-            const craftedList = document.getElementById("craftedList");
-            craftedList.innerHTML = ""; // 清空化合物清單
-            const compoundCount = document.getElementById("compoundCount");
-            compoundCount.textContent = `${craftedCompoundsList.length}/${maxCompounds}`;
-
+            // 更新已製作化合物清單
             craftedCompoundsList.forEach(compound => {
                 const compoundItem = document.createElement("div");
                 compoundItem.className = "compound-item";
                 compoundItem.style.display = "flex";
                 compoundItem.style.justifyContent = "space-between";
                 compoundItem.style.alignItems = "center";
-                compoundItem.style.marginBottom = "5px";
+                compoundItem.style.marginBottom = "10px";
 
-                compoundItem.innerHTML = `
-            <div>${compound}</div>
-            <button class="delete-compound" style="
-                background: #ff4d4d; 
-                color: white; 
-                border: none; 
-                padding: 5px; 
-                border-radius: 3px; 
-                cursor: pointer;">刪除</button>
-        `;
+                // 化合物名稱
+                const compoundName = document.createElement("div");
+                compoundName.textContent = compound;
+                compoundItem.appendChild(compoundName);
 
-                compoundItem.querySelector(".delete-compound").addEventListener("click", () => {
+                // 按鈕容器
+                const buttonGroup = document.createElement("div");
+                buttonGroup.style.display = "flex";
+                buttonGroup.style.gap = "5px";
+
+                // 使用按鈕
+                const useButton = document.createElement("button");
+                useButton.textContent = "使用";
+                useButton.className = "use-compound";
+                useButton.style.backgroundColor = "#4CAF50";
+                useButton.style.color = "white";
+                useButton.style.border = "none";
+                useButton.style.padding = "5px 10px";
+                useButton.style.borderRadius = "5px";
+                useButton.style.cursor = "pointer";
+
+                // 綁定 "使用" 按鈕事件
+                useButton.addEventListener("click", () => {
+                    useCompound(compound); // 執行技能
                     craftedCompoundsList = craftedCompoundsList.filter(c => c !== compound);
-                    updateInventory(); // 刪除後更新顯示
+                    updateInventory(); // 更新清單
                 });
 
+                // 刪除按鈕
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "刪除";
+                deleteButton.className = "delete-compound";
+                deleteButton.style.backgroundColor = "#f44336";
+                deleteButton.style.color = "white";
+                deleteButton.style.border = "none";
+                deleteButton.style.padding = "5px 10px";
+                deleteButton.style.borderRadius = "5px";
+                deleteButton.style.cursor = "pointer";
+
+                // 綁定 "刪除" 按鈕事件
+                deleteButton.addEventListener("click", () => {
+                    craftedCompoundsList = craftedCompoundsList.filter(c => c !== compound);
+                    updateInventory(); // 更新清單
+                });
+
+                // 添加按鈕到容器
+                buttonGroup.appendChild(useButton);
+                buttonGroup.appendChild(deleteButton);
+
+                // 添加按鈕容器到化合物項目
+                compoundItem.appendChild(buttonGroup);
+
+                // 添加化合物項目到清單
                 craftedList.appendChild(compoundItem);
             });
-
-            // 更新按鈕狀態
-            const combineButton = document.getElementById("combine-button");
-            combineButton.disabled = craftedCompoundsList.length >= maxCompounds;
         }
+
 
 
 
@@ -742,30 +963,7 @@
             shootProjectile(mouseX, mouseY);
         });
 
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlayer();
-            drawElements();
-            drawProjectiles();
-            drawParticles();
-            detectCollision();
 
-            const step = 2;
-            if (keysPressed["ArrowUp"] && player.y > 0) {
-                player.y -= step;
-            }
-            if (keysPressed["ArrowDown"] && player.y + player.size < canvas.height) {
-                player.y += step;
-            }
-            if (keysPressed["ArrowLeft"] && player.x > 0) {
-                player.x -= step;
-            }
-            if (keysPressed["ArrowRight"] && player.x + player.size < canvas.width) {
-                player.x += step;
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
 
         // 更新化合視窗內容
         function updateCombineModal() {
@@ -815,43 +1013,43 @@
                         // 創建新的詳細資訊視窗
                         const detailModal = document.createElement("div");
                         detailModal.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        z-index: 1001;
-        min-width: 300px;
-        text-align: center;
-    `;
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: white;
+                            padding: 20px;
+                            border-radius: 10px;
+                            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                            z-index: 1001;
+                            min-width: 300px;
+                            text-align: center;
+                        `;
 
                         detailModal.innerHTML = `
-        <h3>${name} 詳細資訊</h3>
-        <div id="compound-details">
-            <!-- 這裡會顯示化合物的詳細資訊 -->
-        </div>
-        <button id="confirm-combine" style="
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin: 10px;
-            cursor: pointer;
-        ">確認製作</button>
-        <button id="cancel-combine" style="
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin: 10px;
-            cursor: pointer;
-        ">取消</button>
-    `;
+                            <h3>${name} 詳細資訊</h3>
+                            <div id="compound-details">
+                                <!-- 這裡會顯示化合物的詳細資訊 -->
+                            </div>
+                            <button id="confirm-combine" style="
+                                background: #4CAF50;
+                                color: white;
+                                border: none;
+                                padding: 8px 15px;
+                                border-radius: 5px;
+                                margin: 10px;
+                                cursor: pointer;
+                            ">確認製作</button>
+                            <button id="cancel-combine" style="
+                                background: #f44336;
+                                color: white;
+                                border: none;
+                                padding: 8px 15px;
+                                border-radius: 5px;
+                                margin: 10px;
+                                cursor: pointer;
+                            ">取消</button>
+                        `;
 
                         document.body.appendChild(detailModal);
 
@@ -910,25 +1108,25 @@
             const detailsDiv = document.getElementById("compound-details");
 
             detailsDiv.innerHTML = `
-        <div style="text-align: left; margin: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-            <h4 style="color: #2c3e50; margin-bottom: 10px;">基礎描述：</h4>
-            <p>${details.description}</p>
-            
-            <h4 style="color: #2c3e50; margin-top: 15px;">效果：</h4>
-            <p>${details.effect}</p>
-            
-            <h4 style="color: #2c3e50; margin-top: 15px;">所需元素：</h4>
-            <p>${details.elements}</p>
-            
-            <h4 style="color: #2c3e50; margin-top: 15px;">特性：</h4>
-            <p>${details.properties}</p>
-            
-            ${details.recipe ? `
-                <h4 style="color: #2c3e50; margin-top: 15px;">化學反應式：</h4>
-                <p style="font-family: monospace;">${details.recipe}</p>
-            ` : ''}
-        </div>
-    `;
+                <div style="text-align: left; margin: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">基礎描述：</h4>
+                    <p>${details.description}</p>
+                    
+                    <h4 style="color: #2c3e50; margin-top: 15px;">效果：</h4>
+                    <p>${details.effect}</p>
+                    
+                    <h4 style="color: #2c3e50; margin-top: 15px;">所需元素：</h4>
+                    <p>${details.elements}</p>
+                    
+                    <h4 style="color: #2c3e50; margin-top: 15px;">特性：</h4>
+                    <p>${details.properties}</p>
+                    
+                    ${details.recipe ? `
+                        <h4 style="color: #2c3e50; margin-top: 15px;">化學反應式：</h4>
+                        <p style="font-family: monospace;">${details.recipe}</p>
+                    ` : ''}
+                </div>
+            `;
         }
 
         // 魔法老婆婆的對話系統
@@ -938,20 +1136,20 @@
 
             const dialogBox = document.createElement("div");
             dialogBox.style.cssText = `
-        position: fixed;
-        bottom: 20%;
-        left: 50%;
-        transform: translate(-50%, 0);
-        background: rgba(255, 255, 255, 0.95);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.3);
-        z-index: 1002;
-        width: 80%;
-        max-width: 600px;
-        text-align: center;
-        font-family: '微軟正黑體', sans-serif;
-    `;
+                position: fixed;
+                bottom: 20%;
+                left: 50%;
+                transform: translate(-50%, 0);
+                background: rgba(255, 255, 255, 0.95);
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.3);
+                z-index: 1002;
+                width: 80%;
+                max-width: 600px;
+                text-align: center;
+                font-family: '微軟正黑體', sans-serif;
+            `;
 
             function updateDialog() {
                 if (currentDialog < stories.length) {
@@ -1175,6 +1373,284 @@
             combineModal.style.display = "block";
             modalOverlay.style.display = "block";
         });
+
+
+
+        // 更新技能按鈕狀態
+        // function updateSkillButton() {
+        //     // 啟用按鈕條件：至少有一個化合物
+        //     skillButton.disabled = craftedCompoundsList.length === 0;
+        //     if (skillButton.disabled) {
+        //         skillButton.style.cursor = "not-allowed";
+        //         skillButton.style.backgroundColor = "#ccc"; // 禁用樣式
+        //     } else {
+        //         skillButton.style.cursor = "pointer";
+        //         skillButton.style.backgroundColor = "#006494"; // 啟用樣式
+        //     }
+        // }
+
+
+        // 綁定技能按鈕事件
+        // skillButton.addEventListener("click", () => {
+        //     if (craftedCompoundsList.length > 0) {
+        //         // 使用第一個化合物作為示例
+        //         const selectedCompound = craftedCompoundsList[0];
+
+        //         if (skills[selectedCompound]) {
+        //             // 執行技能效果
+        //             skills[selectedCompound].effect();
+
+        //             // 從清單中移除該化合物
+        //             craftedCompoundsList.shift();
+
+        //             // 更新介面
+        //             updateCraftedCompounds();
+        //             updateSkillButton();
+        //         } else {
+        //             alert("該化合物無法觸發技能！");
+        //         }
+        //     } else {
+        //         alert("沒有可用的化合物！");
+        //     }
+        // });
+
+
+        // 更新合成按鈕狀態的函數
+        function updateCombineButton() {
+            const combineButton = document.getElementById("combine-button");
+            combineButton.disabled = craftedCompoundsList.length >= maxCompounds;
+        }
+
+        // 更新已製作化合物顯示
+        // 更新 updateCraftedCompounds 函數
+        function updateCraftedCompounds() {
+            const craftedList = document.getElementById("craftedList");
+            const compoundCount = document.getElementById("compoundCount");
+
+            // 清空化合物清單
+            craftedList.innerHTML = "";
+            compoundCount.textContent = `${craftedCompoundsList.length}/${maxCompounds}`;
+
+            // 為每個化合物生成對應的項目
+            craftedCompoundsList.forEach(compound => {
+                const compoundItem = document.createElement("div");
+                compoundItem.className = "compound-item";
+                compoundItem.style.display = "flex";
+                compoundItem.style.justifyContent = "space-between";
+                compoundItem.style.alignItems = "center";
+                compoundItem.style.marginBottom = "10px";
+
+                // 化合物名稱
+                const compoundName = document.createElement("div");
+                compoundName.textContent = compound;
+                compoundItem.appendChild(compoundName);
+
+                // 按鈕容器
+                const buttonGroup = document.createElement("div");
+                buttonGroup.style.display = "flex";
+                buttonGroup.style.gap = "5px";
+
+                // 使用按鈕
+                const useButton = document.createElement("button");
+                useButton.textContent = "使用";
+                useButton.className = "use-compound";
+                useButton.style.backgroundColor = "#4CAF50";
+                useButton.style.color = "white";
+                useButton.style.border = "none";
+                useButton.style.padding = "5px 10px";
+                useButton.style.borderRadius = "5px";
+                useButton.style.cursor = "pointer";
+
+                // 使用按鈕事件綁定
+                useButton.addEventListener("click", () => {
+                    useCompound(compound); // 執行技能
+                    craftedCompoundsList = craftedCompoundsList.filter(c => c !== compound);
+                    updateCraftedCompounds();
+                    // updateSkillButton();
+                });
+
+                // 刪除按鈕
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "刪除";
+                deleteButton.className = "delete-compound";
+                deleteButton.style.backgroundColor = "#f44336";
+                deleteButton.style.color = "white";
+                deleteButton.style.border = "none";
+                deleteButton.style.padding = "5px 10px";
+                deleteButton.style.borderRadius = "5px";
+                deleteButton.style.cursor = "pointer";
+
+                // 刪除按鈕事件綁定
+                deleteButton.addEventListener("click", () => {
+                    craftedCompoundsList = craftedCompoundsList.filter(c => c !== compound);
+                    updateCraftedCompounds();
+                    // updateSkillButton();
+                });
+
+                // 添加按鈕到容器
+                buttonGroup.appendChild(useButton);
+                buttonGroup.appendChild(deleteButton);
+
+                // 添加按鈕容器到化合物項目
+                compoundItem.appendChild(buttonGroup);
+
+                // 添加化合物項目到清單
+                craftedList.appendChild(compoundItem);
+            });
+
+        }
+
+        function AcidSkillEffect(x, y) {
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 80,
+                    y: y + (Math.random() - 0.5) * 80,
+                    size: Math.random() * 300 + 4,
+                    color: `rgba(0, 128, 0, ${Math.random() * 0.8 + 0.5})`,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 80,
+                    alpha: 1,
+                });
+            }
+        }
+
+        function Co2SkillEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 300 + 2,
+                    color: `rgba(128, 128, 128, ${Math.random() * 0.8 + 0.5})`,
+                    vx: Math.random() * 8 - 4,
+                    vy: Math.random() * 8 - 4,
+                    life: 30,
+                    alpha: 1,
+                });
+            }
+        }
+
+
+        // 使用化合物的函數
+        function useCompound(compound) {
+            switch (compound) {
+                case "二氧化碳":
+                    Co2SkillEffect(player.x, player.y);
+                    break;
+                case "醋酸":
+                    AcidSkillEffect(player.x, player.y);
+                    break;
+                case "蔗糖":
+                    player.health = Math.min(100, player.health + 40);
+                    updateHealthBar();
+                    createLightEffect(player.x, player.y);
+                    break;
+                case "葡萄糖":
+                    player.health = Math.min(100, player.health + 20);
+                    updateHealthBar();
+                    createLightEffect(player.x, player.y);
+                    break;
+                case "碳盾":
+                    createIceEffect(player.x, player.y);
+                    player.health = Math.min(100, player.health + 20);
+                    break;
+                case "一氧化二氮":
+                    createIceEffect(player.x, player.y);
+                    const boostedSpeed = 6;
+                    const duration = 3000;
+
+                    const speedBoostInterval = setInterval(() => {
+                        if (keysPressed["ArrowRight"]) player.x += boostedSpeed;
+                        if (keysPressed["ArrowLeft"]) player.x -= boostedSpeed;
+                        if (keysPressed["ArrowUp"]) player.y -= boostedSpeed;
+                        if (keysPressed["ArrowDown"]) player.y += boostedSpeed;
+                    }, 16);
+
+                    setTimeout(() => {
+                        clearInterval(speedBoostInterval);
+                    }, duration);
+
+                    break;
+                default:
+                    alert("未知的化合物效果");
+            }
+        }
+
+
+
+        // 同步更新狀態
+        updateCraftedCompounds();
+        updateCombineButton();
+        // updateSkillButton();
+
+
+        let step = 2; 
+        // 選取 DOM 元素
+        const speedButton = document.getElementById("speed-button");
+        const speedModal = document.getElementById("speed-modal");
+        const speedOverlay = document.getElementById("speed-overlay");
+        const speedOptions = document.querySelectorAll(".speed-option");
+
+        // 打開速度選單
+        speedButton.addEventListener("click", () => {
+            speedModal.style.display = "block";
+            speedOverlay.style.display = "block";
+        });
+
+        // 關閉速度選單
+        speedOverlay.addEventListener("click", () => {
+            speedModal.style.display = "none";
+            speedOverlay.style.display = "none";
+        });
+
+        // 處理速度選擇
+        speedOptions.forEach(option => {
+            option.addEventListener("click", (e) => {
+                const speed = e.target.getAttribute("data-speed");
+                switch (speed) {
+                    case "fast":
+                        step = 4;
+                        break;
+                    case "medium":
+                        step = 3;
+                        break;
+                    case "slow":
+                        step = 2;
+                        break;
+                    default:
+                        alert("未知速度選項");
+                }
+                speedModal.style.display = "none"; // 關閉選單
+                speedOverlay.style.display = "none"; // 隱藏覆蓋層
+            });
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawElements();
+            drawProjectiles();
+            drawParticles();
+            detectCollision();
+
+
+            if (keysPressed["ArrowUp"] && player.y > 0) {
+                player.y -= step;
+            }
+            if (keysPressed["ArrowDown"] && player.y + player.size < canvas.height) {
+                player.y += step;
+            }
+            if (keysPressed["ArrowLeft"] && player.x > 0) {
+                player.x -= step;
+            }
+            if (keysPressed["ArrowRight"] && player.x + player.size < canvas.width) {
+                player.x += step;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+
 
         document.addEventListener("keydown", (e) => {
             keysPressed[e.key] = true;

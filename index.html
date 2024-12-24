@@ -1,83 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登入畫面</title>
+    <title>元素競技場 - 登入</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', '微軟正黑體', sans-serif;
+        }
+
         body {
             margin: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0e0e0e, #5c5c5c);
+            background: #0a192f;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .element {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s infinite cubic-bezier(0.4, 0, 0.6, 1);
+            opacity: 0.6;
+        }
+
+        .element::before {
+            content: attr(data-symbol);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(20px, -30px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, -50px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-20px, -30px) rotate(270deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: rise 15s infinite cubic-bezier(0.4, 0, 0.6, 1);
+            opacity: 0;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(120vh) scale(0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.5;
+            }
+            80% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-20vh) scale(2);
+                opacity: 0;
+            }
         }
 
         #login-container {
-            background: white;
-            padding: 20px 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 400px;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .title {
             text-align: center;
-            width: 300px;
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
-        #login-container h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #333;
+        .title h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #64ffda, #00bcd4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        #login-container input {
+        .title p {
+            color: #8892b0;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
             font-size: 16px;
+            color: #fff;
+            transition: all 0.3s ease;
         }
 
-        #login-container button {
-            background: #567197;
-            color: white;
-            padding: 10px 15px;
+        .input-group input:focus {
+            border-color: #64ffda;
+            outline: none;
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #64ffda, #00bcd4);
+            color: #0a192f;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
-            width: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        #login-container button:hover {
-            background: #5595ff;
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(100, 255, 218, 0.4);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover::after {
+            left: 100%;
         }
     </style>
 </head>
-
 <body>
+    <div class="floating-elements">
+        <!-- 元素會由JavaScript動態生成 -->
+    </div>
+    
     <div id="login-container">
-        <h1>玩家登入</h1>
+        <div class="title">
+            <h1>元素競技場</h1>
+            <p>開啟你的化學魔法之旅</p>
+        </div>
+        
         <form action="game.html" method="get">
-            <input type="text" name="name" placeholder="輸入玩家名稱" required>
-            <button type="submit">開始遊戲</button>
-        </form>        
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="playerName" 
+                    name="name" 
+                    required
+                    autocomplete="off"
+                    placeholder="輸入你的魔法師名稱">
+            </div>
+
+            <button type="submit">
+                開始冒險
+            </button>
+        </form>
     </div>
 
     <script>
-        function login() {
-            const playerName = document.getElementById("playerName").value.trim();
-            if (playerName) {
-                // 將玩家名稱儲存到 localStorage 並跳轉至遊戲頁面
-                localStorage.setItem("playerName", playerName);
-                window.location.href = "game.html"; // 確保遊戲頁面檔案名稱為 game.html
-            } else {
-                alert("請輸入玩家名稱！");
-            }
+        const elements = [
+            { symbol: 'H', color: '#64ffda' },
+            { symbol: 'O', color: '#00bcd4' },
+            { symbol: 'C', color: '#b388ff' },
+            { symbol: 'N', color: '#ff80ab' },
+            { symbol: 'Fe', color: '#ffd740' }
+        ];
+
+        const floatingElements = document.querySelector('.floating-elements');
+
+        for (let i = 0; i < 15; i++) {
+            const element = elements[Math.floor(Math.random() * elements.length)];
+            const div = document.createElement('div');
+            div.className = 'element';
+            div.setAttribute('data-symbol', element.symbol);
+            div.style.backgroundColor = element.color;
+            div.style.width = Math.random() * 30 + 30 + 'px';
+            div.style.height = div.style.width;
+            div.style.left = Math.random() * 100 + 'vw';
+            div.style.top = Math.random() * 100 + 'vh';
+            div.style.animationDelay = Math.random() * 10 + 's';
+            div.style.animationDuration = Math.random() * 10 + 20 + 's';
+            floatingElements.appendChild(div);
         }
+
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.width = Math.random() * 50 + 20 + 'px';
+            bubble.style.height = bubble.style.width;
+            bubble.style.left = Math.random() * 100 + 'vw';
+            floatingElements.appendChild(bubble);
+
+            bubble.addEventListener('animationend', () => {
+                bubble.remove();
+            });
+        }
+
+        setInterval(createBubble, 1500);
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                e.preventDefault();
+                alert('請輸入玩家名稱！');
+                return;
+            }
+            localStorage.setItem('playerName', playerName);
+        });
     </script>
 </body>
-
 </html>
