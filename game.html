@@ -27,6 +27,9 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            background-color: #f5f5f5;
+            padding: 20px;
+            gap: 20px;
         }
 
         #top-right {
@@ -44,34 +47,33 @@
 
         #inventory,
         #craftedCompounds {
-            flex: 1;
             background: white;
-            border: 2px solid #ccc;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 10px;
-            overflow-y: auto;
-            max-height: 250px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         #inventory h3,
         #craftedCompounds h3 {
-            margin: 0 0 10px;
-            color: #333;
-            font-size: 18px;
-            font-weight: bold;
+            margin: 0 0 15px;
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
             text-align: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         #elementsList,
         #craftedList {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding: 5px;
+            gap: 8px;
+            flex-grow: 1;
         }
 
         .element-item,
@@ -79,17 +81,64 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #fafafa;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
         .element-item:hover,
         .compound-item:hover {
-            background: #f9f9f9;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            background: #edf2f7;
+            transform: translateY(-1px);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        /* 統一按鈕樣式 */
+        .game-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #4CAF50;
+            color: white;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        #combine-button {
+            background: #4CAF50;
+        }
+
+        #encyclopedia-button {
+            background: #2196F3;
+        }
+
+        #speed-button {
+            background: #9C27B0;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
         }
 
         .delete-compound {
@@ -182,6 +231,17 @@
 
         canvas {
             background-color: #d0d0d0;
+        }
+
+        #elementsList::-webkit-scrollbar,
+        #craftedList::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #elementsList::-webkit-scrollbar-thumb,
+        #craftedList::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
         }
 
         #health-bar-container {
@@ -334,7 +394,54 @@
             cursor: pointer;
             text-align: center;
         }
+        .encyclopedia-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
 
+        /* 返回按鈕 */
+        #back-button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        #back-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* 關閉按鈕 */
+        #close-encyclopedia {
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        #close-encyclopedia:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* 按鈕按下效果 */
+        #back-button:active,
+        #close-encyclopedia:active {
+            transform: translateY(0);
+        }
 
 
 
@@ -387,18 +494,21 @@
         </div>
     </div>
     <div id="right-panel">
-        <div id="top-right">
-            <div id="inventory">
-                <h3>收藏的元素</h3>
-                <div id="elementsList"></div>
-            </div>
-            <div id="craftedCompounds">
-                <h3>已製作化合物 <span id="compoundCount">0/2</span></h3>
-                <div id="craftedList"></div>
-            </div>
+        <!-- <div id="top-right"> -->
+        <div id="inventory">
+            <h3>收藏的元素</h3>
+            <div id="elementsList"></div>
         </div>
-        <button id="combine-button">化合</button>
-        <button id="encyclopedia-button">圖鑑</button>
+        <div id="craftedCompounds">
+            <h3>已製作化合物 <span id="compoundCount">0/2</span></h3>
+            <div id="craftedList"></div>
+        </div>
+        <!-- </div> -->
+        <div class="button-container">
+            <button id="combine-button" class="game-button">化合</button>
+            <button id="encyclopedia-button" class="game-button">圖鑑</button>
+            <button id="speed-button" class="game-button">移動</button>
+        </div>
 
         <div id="encyclopedia-modal">
             <h3 id="modal-title">圖鑑</h3>
@@ -407,12 +517,7 @@
             <button id="close-encyclopedia">關閉</button>
         </div>
         <div id="encyclopedia-overlay"></div>
-        <div id="announcement">
-            <h3 id="announcement-title">說明欄</h3>
-            <p id="announcement-content">
-                這邊之後可以放元素教學等等等說明
-            </p>
-        </div>
+        
     </div>
     <div id="modal-overlay"></div>
     <div id="combine-modal">
@@ -425,13 +530,12 @@
             style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0;">
             <!-- 化合按鈕 -->
         </div>
-        <button id="close-modal">返回</button>
+        <button id="close-modal" style="background-color: #3498db;
+            color: white;">返回</button>
     </div>
 
 
-    <div id="button-container">
-        <button id="speed-button">移動</button>
-    </div>
+    
 
     <div id="speed-overlay"></div>
     <div id="speed-modal">
@@ -792,6 +896,7 @@
             if (player.health <= 0) {
                 alert("遊戲結束！血量歸零。");
                 cancelAnimationFrame(gameLoop); // 停止遊戲循環
+                location.reload(); // 自動刷新網頁，重新開始遊戲
             }
         }
         function detectCollision() {
@@ -1584,7 +1689,7 @@
         // updateSkillButton();
 
 
-        let step = 2; 
+        let step = 2;
         // 選取 DOM 元素
         const speedButton = document.getElementById("speed-button");
         const speedModal = document.getElementById("speed-modal");
@@ -1662,7 +1767,7 @@
 
         setInterval(() => {
             elements.push(generateRandomElement());
-        }, 10000);
+        }, 4000);
 
         gameLoop();
     </script>
