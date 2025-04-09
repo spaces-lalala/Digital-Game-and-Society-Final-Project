@@ -1,0 +1,473 @@
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    font-family: Arial, sans-serif;
+}
+
+#left-panel {
+    flex: 3;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+    padding: 20px;
+    gap: 20px;
+}
+
+#top-right {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+#bottom-right {
+    flex: 1;
+    background-color: #e8e8e8;
+}
+
+#inventory,
+#craftedCompounds {
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#inventory h3,
+#craftedCompounds h3 {
+    margin: 0 0 15px;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+#elementsList,
+#craftedList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.element-item,
+.compound-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.element-item:hover,
+.compound-item:hover {
+    background: #edf2f7;
+    transform: translateY(-1px);
+}
+
+.button-container {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+/* 統一按鈕樣式 */
+.game-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #4CAF50;
+    color: white;
+    min-width: 100px;
+    text-align: center;
+}
+
+#combine-button {
+    background: #4CAF50;
+}
+
+#encyclopedia-button {
+    background: #2196F3;
+}
+
+#speed-button {
+    background: #9C27B0;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+}
+
+.game-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.game-button:active {
+    transform: translateY(0);
+}
+
+.delete-compound {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.delete-compound:hover {
+    background: #e03c3c;
+}
+
+#announcement {
+    flex: 1;
+    background: #fff;
+    border: 2px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+#combine-button {
+    margin: 20px auto;
+    padding: 15px 30px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    display: block;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#combine-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#combine-button:hover:not(:disabled) {
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+#combine-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    padding: 20px;
+    text-align: center;
+}
+
+#combine-modal h3 {
+    margin: 0 0 20px;
+}
+
+
+
+#modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+canvas {
+    background-color: #d0d0d0;
+}
+
+#elementsList::-webkit-scrollbar,
+#craftedList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#elementsList::-webkit-scrollbar-thumb,
+#craftedList::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+#health-bar-container {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 200px;
+    height: 20px;
+    background-color: #ccc;
+    border: 2px solid #000;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#health-bar {
+    width: 100%;
+    height: 100%;
+    background-color: #f00;
+    transition: width 0.3s ease;
+}
+
+#player-name-container {
+    position: absolute;
+    left: 220px;
+    /* 血條右邊 */
+    bottom: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#encyclopedia-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    padding: 20px;
+    text-align: center;
+}
+
+#encyclopedia-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+#modal-content button {
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#modal-content button:hover {
+    background-color: #45a049;
+}
+
+
+#button-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+}
+
+#combine-button {
+    background-color: #21f359;
+}
+
+#speed-button {
+    width: 50px;
+    height: 50px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    /* 字體大小縮小 */
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    transition: background 0.3s ease, transform 0.2s ease;
+    text-align: center;
+}
+
+#speed-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 1000;
+}
+
+#speed-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 999;
+}
+
+.speed-option {
+    display: block;
+    padding: 10px 20px;
+    margin: 10px 0;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.encyclopedia-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* 返回按鈕 */
+#back-button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+#back-button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* 關閉按鈕 */
+#close-encyclopedia {
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+#close-encyclopedia:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* 按鈕按下效果 */
+#back-button:active,
+#close-encyclopedia:active {
+    transform: translateY(0);
+}
+
+
+
+
+#skill-button {
+    width: 50px;
+    height: 50px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    /* 圓形 */
+    cursor: not-allowed;
+    /* 預設禁用 */
+    font-size: 14px;
+    /* 字體大小縮小 */
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    transition: background 0.3s ease, transform 0.2s ease;
+    text-align: center;
+}
+
+#skill-button:enabled {
+    cursor: pointer;
+    background-color: #006494;
+}
+
+#skill-button:enabled:hover {
+    background-color: #004d73;
+    transform: scale(1.1);
+    /* 放大輕微效果 */
+}
