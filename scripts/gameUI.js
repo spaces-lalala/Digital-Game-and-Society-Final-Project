@@ -260,7 +260,7 @@ Game.showGrandmaDialog = function(compound) {
         if (currentDialog < stories.length) {
             dialogBox.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <img src="./magic-grandma.png" alt="魔法老婆婆" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px;">
+                    <img src="./assets/images/magic-grandma.png" alt="魔法老婆婆" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px;">
                     <h3 style="margin: 0; color: #4a4a4a;">魔法老婆婆</h3>
                 </div>
                 <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">${stories[currentDialog]}</p>
